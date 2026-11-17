@@ -1,0 +1,52 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "north": "computah:block/adapter_side",
+    "south": "computah:block/adapter_side",
+    "east": "computah:block/adapter_side",
+    "west": "computah:block/adapter_side",
+    "up": "computah:block/adapter_top",
+    "down": "computah:block/adapter_top",
+    "particle": "computah:block/adapter_side"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south"
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west"
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#down",
+          "cullface": "down"
+        }
+      }
+    }
+  ]
+}

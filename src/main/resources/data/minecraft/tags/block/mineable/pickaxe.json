@@ -1,0 +1,17 @@
+{
+  "values": [
+    "computah:case1",
+    "computah:case2",
+    "computah:case3",
+    "computah:screen1",
+    "computah:screen2",
+    "computah:screen3",
+    "computah:keyboard",
+    "computah:disk_drive",
+    "computah:cable",
+    "computah:relay",
+    "computah:rack",
+    "computah:adapter",
+    "computah:redstone_io"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computah:block/screen"
+    },
+    "facing=east": {
+      "model": "computah:block/screen",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "computah:block/screen",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "computah:block/screen",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computah:block/relay"
+    },
+    "facing=east": {
+      "model": "computah:block/relay"
+    },
+    "facing=south": {
+      "model": "computah:block/relay"
+    },
+    "facing=west": {
+      "model": "computah:block/relay"
+    }
+  }
+}

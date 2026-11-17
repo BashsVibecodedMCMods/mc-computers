@@ -357,7 +357,7 @@ public final class Machine extends Component {
                     waitingPull = false;
                     resumeArgs = LuaConverter.toVarargs(sig);
                     submit();
-                } else if (uptime() >= pullDeadline) {
+                } else if (uptime() + 1e-9 >= pullDeadline) {
                     waitingPull = false;
                     resumeArgs = Constants.NONE;
                     submit();

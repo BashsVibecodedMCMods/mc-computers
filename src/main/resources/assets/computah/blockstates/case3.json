@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,running=false": {
+      "model": "computah:block/case"
+    },
+    "facing=north,running=true": {
+      "model": "computah:block/case_running"
+    },
+    "facing=east,running=false": {
+      "model": "computah:block/case",
+      "y": 90
+    },
+    "facing=east,running=true": {
+      "model": "computah:block/case_running",
+      "y": 90
+    },
+    "facing=south,running=false": {
+      "model": "computah:block/case",
+      "y": 180
+    },
+    "facing=south,running=true": {
+      "model": "computah:block/case_running",
+      "y": 180
+    },
+    "facing=west,running=false": {
+      "model": "computah:block/case",
+      "y": 270
+    },
+    "facing=west,running=true": {
+      "model": "computah:block/case_running",
+      "y": 270
+    }
+  }
+}

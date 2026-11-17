@@ -1,0 +1,52 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "north": "computah:block/switch_side",
+    "south": "computah:block/switch_side",
+    "east": "computah:block/switch_side",
+    "west": "computah:block/switch_side",
+    "up": "computah:block/switch_top",
+    "down": "computah:block/switch_top",
+    "particle": "computah:block/switch_side"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south"
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west"
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#down",
+          "cullface": "down"
+        }
+      }
+    }
+  ]
+}

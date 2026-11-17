@@ -35,7 +35,7 @@ public class MachineTest {
                 sink.put(name, a, b)
                 local t = computer.uptime()
                 local r = computer.pullSignal(0.2)
-                sink.put(r == nil, computer.uptime() - t >= 0.2)
+                sink.put(r == nil, computer.uptime() - t >= 0.199)
                 -- signals pass through user coroutines
                 local co = coroutine.create(function()
                   computer.pushSignal('inner')

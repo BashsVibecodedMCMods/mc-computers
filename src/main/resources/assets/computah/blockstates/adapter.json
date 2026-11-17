@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computah:block/adapter"
+    },
+    "facing=east": {
+      "model": "computah:block/adapter"
+    },
+    "facing=south": {
+      "model": "computah:block/adapter"
+    },
+    "facing=west": {
+      "model": "computah:block/adapter"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "north": "computah:block/case_front_running",
+    "south": "computah:block/case_back_running",
+    "east": "computah:block/case_side_running",
+    "west": "computah:block/case_side_running",
+    "up": "computah:block/case_top",
+    "down": "computah:block/case_top",
+    "particle": "computah:block/case_front_running"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north",
+          "tintindex": 0
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south",
+          "tintindex": 0
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east",
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west",
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up",
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#down",
+          "cullface": "down",
+          "tintindex": 0
+        }
+      }
+    }
+  ]
+}

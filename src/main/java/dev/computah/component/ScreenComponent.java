@@ -91,7 +91,7 @@ public class ScreenComponent extends Component {
         return new Object[]{blocksWide, blocksHigh};
     }
 
-    @Callback(doc = "function():table -- Addresses of the keyboards attached to this monitor.")
+    @Callback(direct = false, doc = "function():table -- Addresses of the keyboards attached to this monitor.")
     public Object[] getKeyboards(Context ctx, Arguments args) {
         return new Object[]{keyboards.get()};
     }

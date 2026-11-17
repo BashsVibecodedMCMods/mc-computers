@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "computah:block/keyboard"
+    },
+    "facing=down": {
+      "model": "computah:block/keyboard",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "computah:block/keyboard",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "computah:block/keyboard",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west": {
+      "model": "computah:block/keyboard",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east": {
+      "model": "computah:block/keyboard",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

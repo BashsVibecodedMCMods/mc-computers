@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computah:block/redstone_io"
+    },
+    "facing=east": {
+      "model": "computah:block/redstone_io"
+    },
+    "facing=south": {
+      "model": "computah:block/redstone_io"
+    },
+    "facing=west": {
+      "model": "computah:block/redstone_io"
+    }
+  }
+}

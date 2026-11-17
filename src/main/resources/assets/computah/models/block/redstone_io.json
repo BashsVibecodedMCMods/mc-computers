@@ -1,0 +1,52 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "north": "computah:block/redstone_north",
+    "south": "computah:block/redstone_south",
+    "east": "computah:block/redstone_east",
+    "west": "computah:block/redstone_west",
+    "up": "computah:block/redstone_top",
+    "down": "computah:block/redstone_bottom",
+    "particle": "computah:block/redstone_north"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south"
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west"
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#down",
+          "cullface": "down"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computah:block/rack"
+    },
+    "facing=east": {
+      "model": "computah:block/rack",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "computah:block/rack",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "computah:block/rack",
+      "y": 270
+    }
+  }
+}
