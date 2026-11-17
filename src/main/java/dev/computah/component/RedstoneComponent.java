@@ -15,7 +15,7 @@ import java.util.Map;
  * Sides are numbered like Minecraft's directions: 0 down, 1 up, 2 north, 3 south, 4 west, 5 east. Input changes send
  * {@code redstone_changed(address, side, oldValue, newValue)}.
  */
-public class RedstoneComponent extends Component {
+public class RedstoneComponent extends Component implements dev.computah.api.PersistentComponent {
     /** The block this component reads and drives. */
     public interface Host {
         /** Current input on a side (server thread). */
@@ -64,6 +64,24 @@ public class RedstoneComponent extends Component {
             }
             if (old != now) signalAll("redstone_changed", address, d.ordinal(), old, now);
         }
+    }
+
+    @Override
+    public synchronized net.minecraft.nbt.CompoundTag saveState(dev.computah.machine.Machine machine) {
+        net.minecraft.nbt.CompoundTag t = new net.minecraft.nbt.CompoundTag();
+        t.putIntArray("outputs", outputs.clone());
+        t.putIntArray("inputs", lastInputs.clone());
+        return t;
+    }
+
+    @Override
+    public void loadState(dev.computah.machine.Machine machine, net.minecraft.nbt.CompoundTag t) {
+        synchronized (this) {
+            int[] o = t.getIntArray("outputs"), in = t.getIntArray("inputs");
+            if (o.length == 6) System.arraycopy(o, 0, outputs, 0, 6);
+            if (in.length == 6) System.arraycopy(in, 0, lastInputs, 0, 6);
+        }
+        host.outputsChanged();
     }
 
     private static Direction side(Arguments args, int i) throws ComponentException {

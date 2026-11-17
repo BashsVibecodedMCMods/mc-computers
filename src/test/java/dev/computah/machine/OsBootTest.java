@@ -36,13 +36,25 @@ public class OsBootTest {
         final EepromComponent eeprom = new EepromComponent(UUID.randomUUID().toString(),
                 new EepromComponent.Contents(PartItem.biosCode().getBytes(StandardCharsets.UTF_8), new byte[0], "BIOS", false), c -> {
         });
-        final Machine machine;
+        Machine machine;
 
         Rig(long memory) {
             host.spec = new MachineSpec(memory, 16, 2, 5, 64 * 1024);
             machine = new Machine(host);
             machine.setComponents(List.of(screen, keyboard, gpu, os, hdd, eeprom));
             assertTrue(machine.start());
+        }
+
+        /** Saves the running machine and restores it into a new Machine with a new GPU object, like a reload. */
+        void reload() throws Exception {
+            byte[] saved = machine.saveState(2000);
+            assertNotNull(saved);
+            String address = machine.address();
+            machine.stop();
+            GpuComponent newGpu = new GpuComponent(gpu.address(), 3);
+            machine = new Machine(host, address);
+            machine.setComponents(List.of(screen, keyboard, newGpu, os, hdd, eeprom));
+            assertTrue(machine.restoreState(saved), "restore failed");
         }
 
         String screenText() {
@@ -194,6 +206,27 @@ public class OsBootTest {
         rig.type("cat /tmp/new.txt");
         rig.run(() -> rig.screenText().contains("hello editor\n"), 1000);
         assertTrue(rig.screenText().contains("hello editor\n"), rig.screenText());
+        rig.machine.stop();
+    }
+
+    @Test
+    public void runningOsSurvivesSaveAndRestore() throws Exception {
+        Rig rig = new Rig(1024 * 1024);
+        rig.run(() -> rig.screenText().contains("/#"), 3000);
+        rig.type("sleep 1000 &");
+        rig.type("lua");
+        rig.run(() -> rig.screenText().contains("lua>"), 1000);
+        rig.type("x = 6 * 7");
+        rig.run(() -> false, 20);
+        rig.reload();
+        rig.type("=x .. ' ' .. computer.uptime()");
+        rig.run(() -> rig.screenText().contains("\"42 "), 1000);
+        String text = rig.screenText();
+        assertTrue(text.contains("\"42 "), text);
+        rig.type("exit()");
+        rig.type("ps");
+        rig.run(() -> rig.screenText().contains("sleep (bg)"), 1000);
+        assertTrue(rig.screenText().contains("sleep (bg)"), rig.screenText());
         rig.machine.stop();
     }
 

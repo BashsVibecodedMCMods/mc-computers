@@ -14,7 +14,7 @@ import java.util.*;
  * Lua coordinates are 1-based. Drawing costs come out of a per-tick budget that grows with the card's tier; when it
  * runs out the call waits for the next tick. See docs/GRAPHICS.md.
  */
-public class GpuComponent extends Component {
+public class GpuComponent extends Component implements PersistentComponent {
     private static final double[] BUDGET = {0, 96, 192, 384};
 
     private final String address;
@@ -99,6 +99,9 @@ public class GpuComponent extends Component {
             return b;
         }
         ScreenComponent s = screen;
+        if (s == null && screenAddress != null && ctx.machine().component(screenAddress) instanceof ScreenComponent found) {
+            screen = s = found;
+        }
         if (s == null || ctx.machine().component(s.address()) != s) throw new ComponentException("no screen");
         return s.buffer();
     }
@@ -567,6 +570,11 @@ public class GpuComponent extends Component {
     private synchronized DisplayBuffer resolve(int id) throws ComponentException {
         if (id == 0) {
             ScreenComponent s = screen;
+            if (s == null && screenAddress != null) {
+                for (dev.computah.machine.Machine m : machines()) {
+                    if (m.component(screenAddress) instanceof ScreenComponent found) screen = s = found;
+                }
+            }
             if (s == null) throw new ComponentException("no screen");
             return s.buffer();
         }
@@ -602,6 +610,47 @@ public class GpuComponent extends Component {
     }
 
     // endregion
+
+    @Override
+    public synchronized net.minecraft.nbt.CompoundTag saveState(dev.computah.machine.Machine machine) {
+        net.minecraft.nbt.CompoundTag t = new net.minecraft.nbt.CompoundTag();
+        if (screenAddress != null) t.putString("screen", screenAddress);
+        t.putInt("fg", foreground);
+        t.putInt("bg", background);
+        t.putInt("fgIndex", foregroundIndex);
+        t.putInt("bgIndex", backgroundIndex);
+        t.putInt("style", style);
+        t.putInt("active", activeBuffer);
+        t.putInt("next", nextBuffer);
+        net.minecraft.nbt.CompoundTag bufs = new net.minecraft.nbt.CompoundTag();
+        for (Map.Entry<Integer, DisplayBuffer> e : buffers.entrySet()) bufs.putByteArray(String.valueOf(e.getKey()), e.getValue().snapshot());
+        t.put("buffers", bufs);
+        return t;
+    }
+
+    @Override
+    public synchronized void loadState(dev.computah.machine.Machine machine, net.minecraft.nbt.CompoundTag t) {
+        screenAddress = t.contains("screen") ? t.getString("screen") : null;
+        screen = null;
+        foreground = t.getInt("fg");
+        background = t.getInt("bg");
+        foregroundIndex = t.getInt("fgIndex");
+        backgroundIndex = t.getInt("bgIndex");
+        style = t.getInt("style");
+        activeBuffer = t.getInt("active");
+        nextBuffer = Math.max(1, t.getInt("next"));
+        buffers.clear();
+        net.minecraft.nbt.CompoundTag bufs = t.getCompound("buffers");
+        for (String k : bufs.getAllKeys()) {
+            DisplayBuffer b = new DisplayBuffer(tier, 1, 1);
+            try {
+                b.applyLog(bufs.getByteArray(k));
+                buffers.put(Integer.parseInt(k), b);
+            } catch (Exception ignored) {
+            }
+        }
+        if (activeBuffer != 0 && !buffers.containsKey(activeBuffer)) activeBuffer = 0;
+    }
 
     /** Writes an error message onto a screen buffer (used when a machine crashes). */
     public static void showCrash(DisplayBuffer b, String message) {

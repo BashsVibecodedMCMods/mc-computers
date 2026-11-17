@@ -116,6 +116,9 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
 
     @Override
     protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+        if (!state.is(newState.getBlock()) && !level.isClientSide && level.getBlockEntity(pos) instanceof ScreenBlockEntity be) {
+            be.deleteSavedDisplay();
+        }
         super.onRemove(state, level, pos, newState, moved);
         if (!state.is(newState.getBlock()) && !level.isClientSide) ScreenFormation.scheduleAround(level, pos);
     }

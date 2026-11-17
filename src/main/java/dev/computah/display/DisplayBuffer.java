@@ -610,22 +610,29 @@ public final class DisplayBuffer {
                     case OP_PCOPY -> copyPixels(in.readInt(), in.readInt(), in.readInt(), in.readInt(), in.readInt(), in.readInt());
                     case OP_PCLEAR -> clearPixels(in.readInt());
                     case OP_SNAPSHOT -> {
-                        resetTo(Tier.of(in.readInt()));
+                        tier = Tier.of(in.readInt());
                         int w = in.readInt(), h = in.readInt();
-                        cols = Math.max(1, Math.min(tier.cols(), w));
-                        rows = Math.max(1, Math.min(tier.rows(), h));
-                        if (cols != w || rows != h) throw new IOException("bad snapshot");
-                        allocate();
+                        if (w < 1 || h < 1 || w > tier.cols() * 2 || h > tier.rows() * 2) throw new IOException("bad snapshot");
+                        cols = w;
+                        rows = h;
                         depth = in.readInt();
                         for (int i = 0; i < 16; i++) palette[i] = in.readInt();
-                        for (int i = 0; i < cols * rows; i++) {
+                        int n = cols * rows;
+                        chars = new int[n];
+                        fg = new int[n];
+                        bg = new int[n];
+                        style = new byte[n];
+                        for (int i = 0; i < n; i++) {
                             chars[i] = in.readInt();
                             fg[i] = in.readInt();
                             bg[i] = in.readInt();
                             style[i] = in.readByte();
                         }
                         int pw = in.readInt(), ph = in.readInt();
-                        if (pw != pixelWidth || ph != pixelHeight) throw new IOException("bad snapshot");
+                        if (pw < 1 || ph < 1 || pw > tier.pixelWidth() * 2 || ph > tier.pixelHeight() * 2) throw new IOException("bad snapshot");
+                        pixelWidth = pw;
+                        pixelHeight = ph;
+                        pixels = new byte[pw * ph];
                         in.readFully(pixels);
                         version++;
                     }

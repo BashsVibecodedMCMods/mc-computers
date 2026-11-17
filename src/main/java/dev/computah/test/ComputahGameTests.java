@@ -111,6 +111,15 @@ public class ComputahGameTests {
         return null;
     }
 
+    /** The result as a number, or -1 while it is being written. */
+    private static long number(String r) {
+        try {
+            return r == null ? -1 : Long.parseLong(r.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     private static void waitForResult(GameTestHelper helper, Supplier<Machine> machine, String expected, Runnable then) {
         helper.startSequence()
                 .thenIdle(2)
@@ -378,6 +387,63 @@ public class ComputahGameTests {
             be.core().tick();
             helper.assertTrue(be.core().machine().state() == Machine.State.CRASHED, "crashed after removing RAM");
         });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = TIMEOUT, batch = "computah_persist")
+    public static void runningComputerSurvivesReload(GameTestHelper helper) {
+        configure();
+        BlockPos pos = new BlockPos(1, 1, 1);
+        CaseBlockEntity be = computer(helper, pos, """
+                local n = 0
+                local co = coroutine.wrap(function()
+                  while true do
+                    n = n + 1
+                    result(n)
+                    computer.pullSignal(0.05)
+                  end
+                end)
+                co()
+                """);
+        long[] savedCount = new long[1];
+        double[] savedUptime = new double[1];
+        CaseBlockEntity[] fresh = new CaseBlockEntity[1];
+        helper.startSequence()
+                .thenIdle(2)
+                .thenExecute(() -> be.core().start())
+                .thenWaitUntil(() -> {
+                    String r = readResult(be.core().machine());
+                    helper.assertTrue(number(r) >= 5, "counting: " + r);
+                })
+                .thenExecute(() -> {
+                    // Save the block entity like a chunk save, then replace it with a freshly loaded copy.
+                    var registries = helper.getLevel().registryAccess();
+                    var tag = be.saveWithFullMetadata(registries);
+                    savedCount[0] = number(readResult(be.core().machine()));
+                    savedUptime[0] = be.core().machine().uptime();
+                    helper.assertTrue(savedCount[0] >= 5, "count before saving");
+                    BlockPos abs = helper.absolutePos(pos);
+                    CaseBlockEntity copy = new CaseBlockEntity(abs, helper.getLevel().getBlockState(abs));
+                    copy.loadWithComponents(tag, registries);
+                    helper.getLevel().setBlockEntity(copy);
+                    fresh[0] = copy;
+                    helper.assertTrue(be.core().machine().state() != Machine.State.RUNNING, "old copy stopped");
+                })
+                .thenIdle(3)
+                .thenExecute(() -> {
+                    // A rebooted computer would start again at uptime 0.
+                    Machine m = fresh[0].core().machine();
+                    helper.assertTrue(m.isOn(), "restored machine runs: " + m.state() + " " + m.crashMessage());
+                    helper.assertTrue(m.uptime() >= savedUptime[0], "uptime carried over: " + m.uptime() + " vs " + savedUptime[0]);
+                })
+                .thenWaitUntil(() -> {
+                    Machine m = fresh[0].core().machine();
+                    String r = readResult(m);
+                    helper.assertTrue(number(r) > savedCount[0], "continues counting: " + r + " after " + savedCount[0]);
+                })
+                .thenExecute(() -> {
+                    fresh[0].core().stop();
+                })
+                .thenSucceed();
     }
 
     @GameTest(template = "empty", timeoutTicks = TIMEOUT, batch = "computah_redstone")

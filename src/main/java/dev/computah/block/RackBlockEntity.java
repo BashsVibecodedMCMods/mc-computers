@@ -178,6 +178,7 @@ public class RackBlockEntity extends MemberBlockEntity implements SimpleEntityBl
             ItemStack now = servers.getItem(i);
             if (now == mounted[i]) continue;
             HostCore core = cores[i];
+            core.discardState();
             core.shutdown();
             loading[i] = true;
             List<ItemStack> parts = now.isEmpty() ? List.of() : ServerItem.parts(now);
@@ -225,7 +226,10 @@ public class RackBlockEntity extends MemberBlockEntity implements SimpleEntityBl
 
     @Override
     public void removed() {
-        for (HostCore c : cores) c.shutdown();
+        for (HostCore c : cores) {
+            c.discardState();
+            c.shutdown();
+        }
     }
 
     @Override

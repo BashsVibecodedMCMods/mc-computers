@@ -82,6 +82,10 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
     private final AtomicReference<double[]> pendingBeep = new AtomicReference<>();
     private long lastHddSound, lastFloppySound, ticks;
     private String hardwareSignature = "";
+    // Saving running computers (see save/load and docs/ARCHITECTURE.md).
+    private long stateSerial;
+    private boolean pendingRestore;
+    private boolean quiet;
 
     public HostCore(Owner owner, PartKind.SlotType[] layout) {
         this.owner = owner;
@@ -123,7 +127,7 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
             componentsDirty = true;
         }
         long e = NetworkManager.epoch(level), le = NetworkManager.linkEpoch();
-        if ((e != seenEpoch || le != seenLinkEpoch) && NetworkManager.tryScan()) {
+        if ((e != seenEpoch || le != seenLinkEpoch) && (pendingRestore || NetworkManager.tryScan())) {
             seenEpoch = e;
             seenLinkEpoch = le;
             rescan(server);
@@ -133,11 +137,17 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
             componentsDirty = false;
             m.setComponents(allComponents());
         }
+        if (pendingRestore) {
+            pendingRestore = false;
+            if (!restore(server, m)) autoStart = true;
+        }
         if (autoStart) {
             autoStart = false;
             m.start();
         }
         m.update();
+        // Keep the chunk marked as changed while running, so autosaves keep the saved state fresh.
+        if (m.isOn() && ticks % 100 == 0) owner.markDirty();
         double[] beep = pendingBeep.getAndSet(null);
         if (beep != null) {
             float pitch = (float) Math.max(0.5, Math.min(2.0, beep[0] / 440.0));
@@ -338,9 +348,54 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
         else start();
     }
 
-    /** The block was removed or unloaded. */
+    private java.nio.file.Path statePath(ServerLevel level) {
+        return dev.computah.util.WorldFiles.path(level.getServer(), "state", machine().address() + ".bin");
+    }
+
+    private boolean restore(ServerLevel level, Machine m) {
+        byte[] file = dev.computah.util.WorldFiles.read(statePath(level));
+        if (file == null || file.length < 8) return false;
+        java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(file);
+        if (buf.getLong() != stateSerial) {
+            dev.computah.Computah.LOG.info("Saved state of {} doesn't match the world; rebooting it", describe());
+            return false;
+        }
+        byte[] data = java.util.Arrays.copyOfRange(file, 8, file.length);
+        return m.restoreState(data);
+    }
+
+    /** Forgets the saved state (the computer was broken or taken out). */
+    public void discardState() {
+        if (owner.level() instanceof ServerLevel level && machineAddress != null) dev.computah.util.WorldFiles.delete(statePath(level));
+        stateSerial = 0;
+        pendingRestore = false;
+    }
+
+    /** Saves the running machine to the world folder. Keeps the previous save if it can't be saved right now. */
+    private void persist() {
+        if (!(owner.level() instanceof ServerLevel level) || machine == null) return;
+        if (!machine.isOn()) {
+            if (stateSerial != 0) discardState();
+            return;
+        }
+        try {
+            byte[] data = machine.saveState(1000);
+            if (data == null) return;
+            long serial = stateSerial + 1;
+            java.nio.ByteBuffer buf = java.nio.ByteBuffer.allocate(8 + data.length);
+            buf.putLong(serial).put(data);
+            if (dev.computah.util.WorldFiles.write(statePath(level), buf.array())) stateSerial = serial;
+        } catch (dev.computah.machine.persist.LuaPersistence.NotPersistableException ex) {
+            dev.computah.Computah.LOG.warn("Couldn't save the running state of {} ({}); it will reboot when loaded unless a later save works",
+                    describe(), ex.getMessage());
+        }
+    }
+
+    /** The block was removed or unloaded: stop the machine without touching the world. */
     public void shutdown() {
+        quiet = true;
         if (machine != null) machine.stop();
+        quiet = false;
         for (Component c : parts) if (c != null) closePart(c);
         Arrays.fill(parts, null);
         partsDirty = true;
@@ -350,8 +405,10 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
         NonNullList<ItemStack> items = NonNullList.withSize(inventory.getContainerSize(), ItemStack.EMPTY);
         for (int i = 0; i < items.size(); i++) items.set(i, inventory.getItem(i));
         ContainerHelper.saveAllItems(tag, items, registries);
+        persist();
         if (machineAddress != null) tag.putString("machine", machineAddress);
         tag.putBoolean("running", isRunning());
+        tag.putLong("stateSerial", isRunning() ? stateSerial : 0);
     }
 
     public void load(CompoundTag tag, HolderLookup.Provider registries) {
@@ -359,8 +416,11 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
         ContainerHelper.loadAllItems(tag, items, registries);
         for (int i = 0; i < items.size(); i++) inventory.setItem(i, items.get(i));
         if (tag.contains("machine")) machineAddress = tag.getString("machine");
-        // Lua state isn't saved: a computer that was running reboots when it loads.
-        autoStart = tag.getBoolean("running");
+        // A computer that was running continues from its saved state, or reboots if there is none.
+        stateSerial = tag.getLong("stateSerial");
+        boolean running = tag.getBoolean("running");
+        pendingRestore = running && stateSerial != 0;
+        autoStart = running && !pendingRestore;
         partsDirty = true;
     }
 
@@ -413,6 +473,7 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
 
     @Override
     public void onStateChanged(Machine m) {
+        if (quiet) return;
         if (m.state() == Machine.State.CRASHED && m.crashMessage() != null) {
             for (Component c : external) {
                 if (c instanceof ScreenComponent s) {

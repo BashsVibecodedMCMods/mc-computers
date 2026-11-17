@@ -55,8 +55,9 @@ public final class Machine extends Component {
     // Lua state, only touched by the executor thread while executing, or by the server thread while not.
     private @Nullable LuaState lua;
     private @Nullable LuaThread main;
-    private final LuaTable sysMarker = new LuaTable();
-    private final LuaTable syncMarker = new LuaTable();
+    private LuaTable sysMarker = new LuaTable();
+    private LuaTable syncMarker = new LuaTable();
+    private dev.computah.machine.persist.@Nullable Perms perms;
     private long baselineMemory;
     private volatile long usedMemory;
     private long lastHeapCheckTick = -1000;
@@ -434,6 +435,7 @@ public final class Machine extends Component {
             Varargs args = resumeArgs;
             if (args == null) {
                 args = boot();
+                resumeArgs = Constants.NONE;
             }
             long sliceStart = System.nanoTime();
             while (true) {
@@ -539,12 +541,21 @@ public final class Machine extends Component {
         if (used > limit) throw new LuaError("not enough memory");
     }
 
-    private Varargs boot() throws LuaError {
+    /** A fresh Lua state with the standard library and this machine's native functions. */
+    private LuaState newState(LuaTable[] nativesOut) throws LuaError {
         LuaState state = LuaState.builder().interruptHandler(this::onInterrupt).build();
         CoreLibraries.standardGlobals(state);
         Bit32Lib.add(state);
         DebugLib.add(state);
         LuaTable natives = MachineApis.create(this, state);
+        nativesOut[0] = natives;
+        perms = new dev.computah.machine.persist.Perms(state, natives);
+        return state;
+    }
+
+    private Varargs boot() throws LuaError {
+        LuaTable[] natives = new LuaTable[1];
+        LuaState state = newState(natives);
         LuaClosure chunk;
         try (InputStream in = Machine.class.getResourceAsStream("/data/computah/lua/machine.lua")) {
             if (in == null) throw new LuaError("machine.lua is missing");
@@ -557,7 +568,207 @@ public final class Machine extends Component {
         lua = state;
         main = new LuaThread(state, chunk);
         baselineMemory = HeapEstimator.estimate(Long.MAX_VALUE, state.globals());
-        return ValueFactory.varargsOf(natives, sysMarker, syncMarker);
+        return ValueFactory.varargsOf(natives[0], sysMarker, syncMarker);
+    }
+
+    // endregion
+
+    // region Saving and restoring
+
+    private static final int STATE_VERSION = 1;
+
+    /**
+     * Saves everything about this running machine: the Lua heap (all coroutines, mid-call), queued signals, timers,
+     * a pending indirect call, the tmpfs and per-component state. Called on the server thread. If Lua is running
+     * right now, waits up to {@code waitMillis} for it to yield.
+     *
+     * @return the state, or null if the machine isn't running.
+     * @throws dev.computah.machine.persist.LuaPersistence.NotPersistableException if the state can't be saved now.
+     */
+    public @Nullable byte[] saveState(long waitMillis) throws dev.computah.machine.persist.LuaPersistence.NotPersistableException {
+        if (state != State.RUNNING) return null;
+        long deadline = System.nanoTime() + waitMillis * 1_000_000L;
+        while (executing && System.nanoTime() < deadline) Thread.onSpinWait();
+        synchronized (this) {
+            if (state != State.RUNNING) return null;
+            if (executing) throw new dev.computah.machine.persist.LuaPersistence.NotPersistableException("the computer is busy");
+            if (lua == null || main == null || perms == null || resumeArgs == null || pendingCrash != null) {
+                throw new dev.computah.machine.persist.LuaPersistence.NotPersistableException("the computer is still booting");
+            }
+            try {
+                LuaValue[][] queued;
+                synchronized (signals) {
+                    queued = new LuaValue[signals.size()][];
+                    int i = 0;
+                    for (Object[] sig : signals) {
+                        LuaValue[] v = new LuaValue[sig.length];
+                        for (int j = 0; j < sig.length; j++) v[j] = LuaConverter.toLua(sig[j]);
+                        queued[i++] = v;
+                    }
+                }
+                LuaValue[] callArgs = null;
+                if (pendingCall != null) {
+                    Varargs a = pendingCall.args().varargs();
+                    callArgs = new LuaValue[a.count()];
+                    for (int i = 0; i < callArgs.length; i++) callArgs[i] = a.arg(i + 1);
+                }
+                byte[] heap = dev.computah.machine.persist.LuaPersistence.save(
+                        new Object[]{main, sysMarker, syncMarker, lua.stringMetatable, queued, callArgs}, perms);
+
+                java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+                java.io.DataOutputStream out = new java.io.DataOutputStream(bytes);
+                out.writeInt(STATE_VERSION);
+                out.writeLong(ticks);
+                out.writeBoolean(waitingPull);
+                out.writeDouble(Double.isInfinite(pullDeadline) ? -1 : pullDeadline);
+                out.writeBoolean(waitingSync);
+                out.writeUTF(pendingCall == null ? "" : pendingCall.component().address());
+                out.writeUTF(pendingCall == null ? "" : pendingCall.entry().name());
+                out.writeBoolean(shutdownRequested);
+                out.writeBoolean(rebootRequested);
+                FilesystemComponent t = tmp;
+                out.writeUTF(t == null ? "" : t.address());
+                byte[] tmpData = t != null && t.fileSystem() instanceof RamFileSystem ram ? ram.save() : new byte[0];
+                out.writeInt(tmpData.length);
+                out.write(tmpData);
+                net.minecraft.nbt.CompoundTag comps = new net.minecraft.nbt.CompoundTag();
+                net.minecraft.nbt.CompoundTag types = new net.minecraft.nbt.CompoundTag();
+                for (Component c : components.values()) {
+                    types.putString(c.address(), c.type());
+                    if (c instanceof dev.computah.api.PersistentComponent pc && c != t) comps.put(c.address(), pc.saveState(this));
+                }
+                net.minecraft.nbt.CompoundTag extra = new net.minecraft.nbt.CompoundTag();
+                extra.put("components", comps);
+                extra.put("types", types);
+                net.minecraft.nbt.NbtIo.write(extra, out);
+                out.writeInt(heap.length);
+                out.write(heap);
+                out.flush();
+                return bytes.toByteArray();
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    /**
+     * Restores a machine saved with {@link #saveState}. Set the components first (with {@link #setComponents}); the
+     * machine continues where it left off and gets component_added/component_removed for anything that changed
+     * in between. Returns false (and leaves the machine stopped) if the state can't be used, e.g. after a mod
+     * update or a hardware change; the caller should then boot normally.
+     */
+    public synchronized boolean restoreState(byte[] data) {
+        if (state == State.RUNNING || executing) return false;
+        MachineSpec s = host.spec();
+        if (s == null) return false;
+        try {
+            java.io.DataInputStream in = new java.io.DataInputStream(new java.io.ByteArrayInputStream(data));
+            if (in.readInt() != STATE_VERSION) return false;
+            long savedTicks = in.readLong();
+            boolean savedWaitingPull = in.readBoolean();
+            double savedDeadline = in.readDouble();
+            boolean savedWaitingSync = in.readBoolean();
+            String callAddress = in.readUTF();
+            String callMethod = in.readUTF();
+            boolean savedShutdown = in.readBoolean();
+            boolean savedReboot = in.readBoolean();
+            String tmpAddress = in.readUTF();
+            byte[] tmpData = new byte[in.readInt()];
+            in.readFully(tmpData);
+            net.minecraft.nbt.CompoundTag extra = net.minecraft.nbt.NbtIo.read(in);
+            byte[] heap = new byte[in.readInt()];
+            in.readFully(heap);
+
+            LuaTable[] natives = new LuaTable[1];
+            LuaState newLua = newState(natives);
+            Object[] roots = dev.computah.machine.persist.LuaPersistence.load(heap, perms, newLua);
+            if (!(roots[0] instanceof LuaThread thread) || !(roots[1] instanceof LuaTable sys) || !(roots[2] instanceof LuaTable sync)) return false;
+
+            lua = newLua;
+            main = thread;
+            sysMarker = sys;
+            syncMarker = sync;
+            if (roots[3] instanceof LuaTable mt) newLua.stringMetatable = mt;
+            baselineMemory = HeapEstimator.estimate(Long.MAX_VALUE, newLua.globals());
+
+            spec = s;
+            crashMessage = null;
+            pendingCrash = null;
+            killRequested = false;
+            softAborted = false;
+            ticks = savedTicks;
+            waitingPull = savedWaitingPull;
+            pullDeadline = savedDeadline < 0 ? Double.POSITIVE_INFINITY : savedDeadline;
+            waitingSync = savedWaitingSync;
+            shutdownRequested = savedShutdown;
+            rebootRequested = savedReboot;
+            resumeArgs = Constants.NONE;
+            lastHeapCheckTick = -1000;
+            callBudget = s.callBudget();
+
+            components.clear();
+            components.put(address, this);
+            attach(this);
+            if (!tmpAddress.isEmpty()) {
+                RamFileSystem ram = new RamFileSystem(s.tmpSize() > 0 ? s.tmpSize() : 64 * 1024);
+                if (tmpData.length > 0) ram.load(tmpData);
+                tmp = new FilesystemComponent(ram, tmpAddress, FilesystemComponent.fixedLabel("tmpfs"));
+                components.put(tmp.address(), tmp);
+                tmp.attach(this);
+            }
+            for (Component c : external.values()) {
+                components.put(c.address(), c);
+                c.attach(this);
+            }
+            state = State.RUNNING;
+
+            net.minecraft.nbt.CompoundTag comps = extra.getCompound("components");
+            for (Component c : components.values()) {
+                if (c instanceof dev.computah.api.PersistentComponent pc && comps.contains(c.address())) {
+                    pc.loadState(this, comps.getCompound(c.address()));
+                }
+            }
+
+            synchronized (signals) {
+                signals.clear();
+                if (roots[4] instanceof LuaValue[][] queued) {
+                    for (LuaValue[] sig : queued) {
+                        Object[] o = new Object[sig.length];
+                        System.arraycopy(sig, 0, o, 0, sig.length);
+                        if (o.length > 0) o[0] = LuaConverter.utf8(sig[0]);
+                        signals.add(o);
+                    }
+                }
+            }
+            // Tell the program about anything that changed while it was saved.
+            net.minecraft.nbt.CompoundTag types = extra.getCompound("types");
+            for (String a : types.getAllKeys()) {
+                if (!components.containsKey(a)) signal("component_removed", a, types.getString(a));
+            }
+            for (Component c : components.values()) {
+                if (!types.contains(c.address())) signal("component_added", c.address(), c.type());
+            }
+
+            pendingCall = null;
+            if (waitingSync) {
+                Component c = components.get(callAddress);
+                CallbackRegistry.Entry e = c == null ? null : CallbackRegistry.of(c).get(callMethod);
+                LuaValue[] callArgs = roots[5] instanceof LuaValue[] a ? a : new LuaValue[0];
+                if (c != null && e != null) pendingCall = new PendingCall(c, e, new Arguments(ValueFactory.varargsOf(callArgs)));
+            }
+            host.onStateChanged(this);
+            return true;
+        } catch (IOException | LuaError | RuntimeException e) {
+            Computah.LOG.warn("Could not restore {}: {}", host.describe(), e.toString());
+            lua = null;
+            main = null;
+            if (state == State.RUNNING) {
+                for (Component c : components.values()) c.detach(this);
+                components.clear();
+                state = State.STOPPED;
+            }
+            return false;
+        }
     }
 
     // endregion

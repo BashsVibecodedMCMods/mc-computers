@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 Computah: a standalone NeoForge mod (Minecraft 1.21.1, NeoForge 21.1.249, Java 21) adding OpenComputers-style
 modular Lua computers and rack servers. Mod id `computah`, package `dev.computah`. It does **not** depend on CC:
-Tweaked. Lua runs on Cobalt (`cc.tweaked:cobalt`), bundled with jarJar. The design docs in `docs/` are the spec;
+Tweaked. Lua runs on Cobalt (`cc.tweaked:cobalt`), repackaged by the `relocateCobalt` Gradle task into
+`dev.computah.repack.cobalt` and shipped inside our jar (import it from there, never `org.squiddev`). The design docs in `docs/` are the spec;
 keep them in sync with behaviour. `docs/COMPONENTS.md` is generated: run `python3 tools/components_doc.py .` after
 changing any `@Callback` (a unit test fails otherwise).
 
@@ -37,6 +38,13 @@ changing any `@Callback` (a unit test fails otherwise).
 - Lua files: `data/computah/lua/machine.lua` (sandbox), `bios.lua` (default EEPROM), `os/**` (Computah OS, loaded
   by `fs/OsFiles` from resources so data packs can override files).
 - Client code is in `client/` and is reached from common code only through `net/ClientHooks` behind a dist check.
+- **Running computers are saved and restored** (`machine/persist/LuaPersistence`, Eris-like, reflection over
+  Cobalt internals; `Perms` for library/native functions). `HostCore.save` persists to
+  `<world>/computah/state/<address>.bin` with a serial that must match the NBT. Consequences: anything a Lua value
+  can reach must be a Cobalt object, a Lua value or a permanent (no Java lambdas except the natives table);
+  components with per-machine state implement `PersistentComponent`; bumping the Cobalt version needs the
+  persistence tests (`PersistenceTest`, `OsBootTest.runningOsSurvivesSaveAndRestore`, game test
+  `runningcomputersurvivesreload`) to pass.
 
 ## Rules
 - Lua strings are bytes: component text arguments are decoded as UTF-8 and returned as UTF-8.

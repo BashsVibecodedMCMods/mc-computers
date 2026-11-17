@@ -337,8 +337,9 @@ computer.shutdown(true)
   the next tick instead of failing.
 - **Coroutines work normally.** A `computer.pullSignal` inside a coroutine still reaches the machine; the
   coroutine's `resume` just sees it as a normal wait.
-- **No persistence.** When a chunk unloads or the server stops, running computers stop; loaded again, a computer
-  that was running boots from scratch. Store state on drives.
+- **Computers keep running across reloads.** When a chunk unloads or the server stops, a running computer is
+  saved with its whole Lua state and continues where it was when it loads again – your BIOS doesn't run again. Only
+  if the state couldn't be saved (rare; see ARCHITECTURE.md) does it boot from the EEPROM again.
 - **Strings are bytes.** `#s` counts bytes; use `unicode.len` for characters.
 
 ## Read-only EEPROMs and checksums

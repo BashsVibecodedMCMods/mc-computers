@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * The {@code modem} component of network cards (wired, tier 0) and wireless cards (tier 1: limited range; tier 2:
  * unlimited and across dimensions). Messages arrive as {@code modem_message(receiver, sender, port, distance, ...)}.
  */
-public class ModemComponent extends Component {
+public class ModemComponent extends Component implements dev.computah.api.PersistentComponent {
     public static final int MAX_PACKET_SIZE = 8192;
     public static final int MAX_VALUES = 8;
     public static final int MAX_OPEN_PORTS = 128;
@@ -177,6 +177,20 @@ public class ModemComponent extends Component {
         int port = checkPort(args, 0);
         NetworkManager.send(new NetworkManager.Packet(this, null, port, values(args, 1)));
         return new Object[]{true};
+    }
+
+    @Override
+    public net.minecraft.nbt.CompoundTag saveState(Machine machine) {
+        net.minecraft.nbt.CompoundTag t = new net.minecraft.nbt.CompoundTag();
+        t.putIntArray("ports", openPorts.stream().mapToInt(Integer::intValue).toArray());
+        t.putDouble("strength", strength);
+        return t;
+    }
+
+    @Override
+    public void loadState(Machine machine, net.minecraft.nbt.CompoundTag t) {
+        for (int p : t.getIntArray("ports")) openPorts.add(p);
+        if (t.contains("strength") && wirelessTier == 1) strength = Math.min(Config.get(Config.WIRELESS_RANGE), t.getDouble("strength"));
     }
 
     /** Delivers a message (server thread). */

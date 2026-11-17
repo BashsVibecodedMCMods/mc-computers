@@ -29,6 +29,12 @@ components, precompiled bytecode. Computah OS provides `io`, `print`, `require` 
 | Rate-limited calls | Per-tick budgets (CPU and GPU tiers); calls over budget wait a tick. |
 | Open files | 16 per filesystem per computer. |
 
+## Saved state
+
+A running computer is saved with its entire Lua state when its chunk unloads or the world saves, and continues
+from the same point when loaded: variables, coroutines and threads, open files and queued signals all survive.
+`computer.uptime()` carries on from where it was. See [ARCHITECTURE.md](ARCHITECTURE.md#saving-running-computers).
+
 ## Values crossing into components
 
 Strings are byte strings. Component methods that take text decode it as UTF-8; methods that return text return

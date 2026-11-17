@@ -10,11 +10,13 @@ other mod needed.
   redirection, an editor, a Lua prompt and manual pages.
 - **Screens with text and pixel graphics.** Each screen has a text layer (colours and styles) over a pixel layer
   (up to 640x400, 256 colours). Screens merge into monitors of up to 8x6 blocks, and the world shows exactly what
-  the user sees in the screen GUI.
+  the user sees in the screen GUI. Bezels connect into one frame.
 - **Networking.** Cables connect computers to screens, keyboards, disk drives and more. Network and wireless cards
   send messages; relays join networks. A Linker connects blocks wirelessly (like CC: Wireless Peripherals), and
   adapters expose chests, tanks and batteries from any mod.
 - **Server racks.** Four servers per rack, each a full computer, sharing the rack's network, redstone and power.
+- **Computers keep running.** A running computer is saved with its whole Lua state and picks up exactly where it
+  was after chunk unloads and server restarts.
 - **Optional power.** Off by default; turn it on to use Forge Energy.
 - Cheap, vanilla-material recipes in the spirit of ComputerCraft.
 

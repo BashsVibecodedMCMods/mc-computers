@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /** The {@code filesystem} component: hard drives, floppies, the OS disk and each machine's tmpfs. */
-public class FilesystemComponent extends Component {
+public class FilesystemComponent extends Component implements dev.computah.api.PersistentComponent {
     public static final int MAX_HANDLES = 16;
     public static final int MAX_READ = 2048;
 
@@ -41,7 +41,7 @@ public class FilesystemComponent extends Component {
         };
     }
 
-    private record Open(Machine owner, FileSystem.Handle handle) {
+    private record Open(Machine owner, FileSystem.Handle handle, String path, FileSystem.Mode mode) {
     }
 
     private final String address;
@@ -103,6 +103,56 @@ public class FilesystemComponent extends Component {
         synchronized (handles) {
             for (Open o : handles.values()) o.handle().close();
             handles.clear();
+        }
+    }
+
+    @Override
+    public net.minecraft.nbt.CompoundTag saveState(Machine machine) {
+        net.minecraft.nbt.CompoundTag t = new net.minecraft.nbt.CompoundTag();
+        net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+        synchronized (handles) {
+            for (Map.Entry<Integer, Open> e : handles.entrySet()) {
+                Open o = e.getValue();
+                if (o.owner() != machine) continue;
+                net.minecraft.nbt.CompoundTag h = new net.minecraft.nbt.CompoundTag();
+                h.putInt("id", e.getKey());
+                h.putString("path", o.path());
+                h.putString("mode", o.mode().name());
+                try {
+                    h.putLong("pos", o.handle().seek("cur", 0));
+                } catch (IOException ex) {
+                    continue;
+                }
+                list.add(h);
+            }
+            t.putInt("next", nextHandle);
+        }
+        t.put("handles", list);
+        return t;
+    }
+
+    @Override
+    public void loadState(Machine machine, net.minecraft.nbt.CompoundTag t) {
+        synchronized (handles) {
+            nextHandle = Math.max(nextHandle, t.getInt("next"));
+            for (net.minecraft.nbt.Tag x : t.getList("handles", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+                net.minecraft.nbt.CompoundTag h = (net.minecraft.nbt.CompoundTag) x;
+                FileSystem.Mode mode;
+                try {
+                    mode = FileSystem.Mode.valueOf(h.getString("mode"));
+                } catch (IllegalArgumentException e) {
+                    continue;
+                }
+                String path = h.getString("path");
+                try {
+                    // Reopening for writing must not truncate the file again.
+                    FileSystem.Handle handle = fs.open(path, mode == FileSystem.Mode.READ ? FileSystem.Mode.READ : FileSystem.Mode.APPEND);
+                    handle.seek("set", h.getLong("pos"));
+                    handles.put(h.getInt("id"), new Open(machine, handle, path, mode));
+                } catch (IOException ignored) {
+                    // The file is gone; the program gets "bad file descriptor".
+                }
+            }
         }
     }
 
@@ -242,7 +292,7 @@ public class FilesystemComponent extends Component {
             activity(mode != FileSystem.Mode.READ);
             synchronized (handles) {
                 int id = nextHandle++;
-                handles.put(id, new Open(ctx.machine(), h));
+                handles.put(id, new Open(ctx.machine(), h, p, mode));
                 return new Object[]{id};
             }
         } catch (IOException e) {

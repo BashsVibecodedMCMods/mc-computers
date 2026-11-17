@@ -21,6 +21,11 @@ public final class Arguments {
         return new Arguments(LuaConverter.toVarargs(values));
     }
 
+    /** The raw Lua values. */
+    public Varargs varargs() {
+        return args;
+    }
+
     public int count() {
         return args.count();
     }

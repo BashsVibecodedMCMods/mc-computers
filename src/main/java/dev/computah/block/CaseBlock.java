@@ -75,6 +75,7 @@ public class CaseBlock extends HorizontalDirectionalBlock implements EntityBlock
     @Override
     protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof CaseBlockEntity be) {
+            be.core().discardState();
             be.core().shutdown();
             Containers.dropContents(level, pos, be.core().inventory());
         }

@@ -154,6 +154,7 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         this.width = width;
         this.height = height;
         if (!isOrigin()) {
+            if (wasOrigin) deleteSavedDisplay();
             buffer = null;
             component = null;
         } else if (component != null) {
@@ -178,6 +179,7 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         if (log == null && on == be.lastSentOn) return;
         be.lastSentOn = on;
         if (log == null) log = new byte[0];
+        else be.setChanged();
         boolean snapshot = log.length > MAX_LOG;
         byte[] data = snapshot ? be.buffer.snapshot() : log;
         PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level, new ChunkPos(pos), DisplayPayload.of(pos, data, snapshot, be.screenOn()));
@@ -202,9 +204,40 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         if (level != null && level.isClientSide) dev.computah.net.ClientHooks.displayRemoved(worldPosition);
     }
 
+    // The display is saved to the world folder so a monitor keeps showing the same image after a reload.
+    private int savedVersion = -1;
+
+    private java.nio.file.Path displayPath() {
+        return dev.computah.util.WorldFiles.path(level.getServer(), "screens", address + ".bin");
+    }
+
+    void deleteSavedDisplay() {
+        if (level != null && !level.isClientSide) dev.computah.util.WorldFiles.delete(displayPath());
+    }
+
+    private void saveDisplay() {
+        if (level == null || level.isClientSide || !isOrigin() || buffer == null || buffer.version() == savedVersion) return;
+        savedVersion = buffer.version();
+        dev.computah.util.WorldFiles.write(displayPath(), buffer.snapshot());
+    }
+
+    private void loadDisplay() {
+        byte[] data = dev.computah.util.WorldFiles.read(displayPath());
+        if (data == null) return;
+        try {
+            DisplayBuffer b = buffer();
+            b.applyLog(data);
+            b.clearLog();
+            savedVersion = b.version();
+        } catch (Exception e) {
+            buffer = null;
+        }
+    }
+
     @Override
     public void onLoad() {
         super.onLoad();
+        if (level != null && !level.isClientSide && isOrigin()) loadDisplay();
         if (level != null && !level.isClientSide) ScreenFormation.schedule(level, worldPosition);
         else if (level != null && isOrigin()) dev.computah.net.ClientHooks.requestDisplay(worldPosition);
     }
@@ -214,6 +247,7 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         super.saveAdditional(tag, registries);
         tag.putString("address", address);
         tag.putBoolean("on", screenOn());
+        saveDisplay();
         writeClient(tag);
     }
 
