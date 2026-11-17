@@ -1,0 +1,13 @@
+Sounds from OpenComputers (https://github.com/MightyPirates/OpenComputers).
+
+floppy_access*.ogg, floppy_eject.ogg, floppy_insert.ogg: by asie, public domain (CC0) as part of OpenComputers.
+
+hdd_access*.ogg: modified versions of
+hard_drive_noise (miroslawski.net).wav by artykris -- https://freesound.org/s/117401/ -- License: Sampling+
+
+Sampling+: You are free to sample, mash-up, or otherwise creatively transform this sound (even for commercial
+purposes), and to perform, display, and distribute copies of this whole sound for noncommercial purposes as long
+as you credit the author and do not use the sound to advertise for or promote anything but the sound you create
+from it.
+
+computer_running.ogg: OpenComputers, public domain (CC0).
