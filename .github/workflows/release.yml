@@ -2,7 +2,7 @@ name: Build and release
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/**']
     # MC<minecraft version>-<mod version>[-suffix], e.g. MC1.21.1-1.0.0 or MC1.21.1-1.0.0-beta.1.
     # v<mod version>[-suffix] still works.
     tags: ['MC*', 'v*']

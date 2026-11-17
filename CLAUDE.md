@@ -16,7 +16,7 @@ changing any `@Callback` (a unit test fails otherwise).
   names are lowercased method names. `dev/computah/test/**` and `data/computah/structure/**` are excluded from the jar.
 - **Never run the client (`runClient`) or any graphical test in the cloud environment**: it can't render Minecraft.
   For hands-on testing, push and run the CI workflow, then hand over the `computah` jar artifact.
-- CI is `.github/workflows/release.yml` (copied from the sibling mods). It builds and runs game tests on pushes to
+- CI is `.github/workflows/release.yml` (copied from the sibling mods). It builds and runs game tests on pushes to `claude/**` branches and
   `main`, PRs and manual runs. Pushing `MC<mc>-<mod version>[-suffix]` publishes a release with
   `.github/release-notes.md`; a manual run with a `tag` input does the same. The mod version in the tag must equal
   `mod_version`.
