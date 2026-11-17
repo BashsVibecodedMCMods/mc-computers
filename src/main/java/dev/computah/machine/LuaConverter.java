@@ -1,6 +1,6 @@
 package dev.computah.machine;
 
-import org.squiddev.cobalt.*;
+import dev.computah.repack.cobalt.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;

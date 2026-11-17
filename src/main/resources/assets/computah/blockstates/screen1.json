@@ -1,18 +1,243 @@
 {
   "variants": {
-    "facing=north": {
-      "model": "computah:block/screen"
+    "facing=north,horizontal=single,vertical=single": {
+      "model": "computah:block/screen_single_single"
     },
-    "facing=east": {
-      "model": "computah:block/screen",
+    "facing=north,horizontal=single,vertical=first": {
+      "model": "computah:block/screen_single_first"
+    },
+    "facing=north,horizontal=single,vertical=middle": {
+      "model": "computah:block/screen_single_middle"
+    },
+    "facing=north,horizontal=single,vertical=last": {
+      "model": "computah:block/screen_single_last"
+    },
+    "facing=north,horizontal=first,vertical=single": {
+      "model": "computah:block/screen_first_single"
+    },
+    "facing=north,horizontal=first,vertical=first": {
+      "model": "computah:block/screen_first_first"
+    },
+    "facing=north,horizontal=first,vertical=middle": {
+      "model": "computah:block/screen_first_middle"
+    },
+    "facing=north,horizontal=first,vertical=last": {
+      "model": "computah:block/screen_first_last"
+    },
+    "facing=north,horizontal=middle,vertical=single": {
+      "model": "computah:block/screen_middle_single"
+    },
+    "facing=north,horizontal=middle,vertical=first": {
+      "model": "computah:block/screen_middle_first"
+    },
+    "facing=north,horizontal=middle,vertical=middle": {
+      "model": "computah:block/screen_middle_middle"
+    },
+    "facing=north,horizontal=middle,vertical=last": {
+      "model": "computah:block/screen_middle_last"
+    },
+    "facing=north,horizontal=last,vertical=single": {
+      "model": "computah:block/screen_last_single"
+    },
+    "facing=north,horizontal=last,vertical=first": {
+      "model": "computah:block/screen_last_first"
+    },
+    "facing=north,horizontal=last,vertical=middle": {
+      "model": "computah:block/screen_last_middle"
+    },
+    "facing=north,horizontal=last,vertical=last": {
+      "model": "computah:block/screen_last_last"
+    },
+    "facing=east,horizontal=single,vertical=single": {
+      "model": "computah:block/screen_single_single",
       "y": 90
     },
-    "facing=south": {
-      "model": "computah:block/screen",
+    "facing=east,horizontal=single,vertical=first": {
+      "model": "computah:block/screen_single_first",
+      "y": 90
+    },
+    "facing=east,horizontal=single,vertical=middle": {
+      "model": "computah:block/screen_single_middle",
+      "y": 90
+    },
+    "facing=east,horizontal=single,vertical=last": {
+      "model": "computah:block/screen_single_last",
+      "y": 90
+    },
+    "facing=east,horizontal=first,vertical=single": {
+      "model": "computah:block/screen_first_single",
+      "y": 90
+    },
+    "facing=east,horizontal=first,vertical=first": {
+      "model": "computah:block/screen_first_first",
+      "y": 90
+    },
+    "facing=east,horizontal=first,vertical=middle": {
+      "model": "computah:block/screen_first_middle",
+      "y": 90
+    },
+    "facing=east,horizontal=first,vertical=last": {
+      "model": "computah:block/screen_first_last",
+      "y": 90
+    },
+    "facing=east,horizontal=middle,vertical=single": {
+      "model": "computah:block/screen_middle_single",
+      "y": 90
+    },
+    "facing=east,horizontal=middle,vertical=first": {
+      "model": "computah:block/screen_middle_first",
+      "y": 90
+    },
+    "facing=east,horizontal=middle,vertical=middle": {
+      "model": "computah:block/screen_middle_middle",
+      "y": 90
+    },
+    "facing=east,horizontal=middle,vertical=last": {
+      "model": "computah:block/screen_middle_last",
+      "y": 90
+    },
+    "facing=east,horizontal=last,vertical=single": {
+      "model": "computah:block/screen_last_single",
+      "y": 90
+    },
+    "facing=east,horizontal=last,vertical=first": {
+      "model": "computah:block/screen_last_first",
+      "y": 90
+    },
+    "facing=east,horizontal=last,vertical=middle": {
+      "model": "computah:block/screen_last_middle",
+      "y": 90
+    },
+    "facing=east,horizontal=last,vertical=last": {
+      "model": "computah:block/screen_last_last",
+      "y": 90
+    },
+    "facing=south,horizontal=single,vertical=single": {
+      "model": "computah:block/screen_single_single",
       "y": 180
     },
-    "facing=west": {
-      "model": "computah:block/screen",
+    "facing=south,horizontal=single,vertical=first": {
+      "model": "computah:block/screen_single_first",
+      "y": 180
+    },
+    "facing=south,horizontal=single,vertical=middle": {
+      "model": "computah:block/screen_single_middle",
+      "y": 180
+    },
+    "facing=south,horizontal=single,vertical=last": {
+      "model": "computah:block/screen_single_last",
+      "y": 180
+    },
+    "facing=south,horizontal=first,vertical=single": {
+      "model": "computah:block/screen_first_single",
+      "y": 180
+    },
+    "facing=south,horizontal=first,vertical=first": {
+      "model": "computah:block/screen_first_first",
+      "y": 180
+    },
+    "facing=south,horizontal=first,vertical=middle": {
+      "model": "computah:block/screen_first_middle",
+      "y": 180
+    },
+    "facing=south,horizontal=first,vertical=last": {
+      "model": "computah:block/screen_first_last",
+      "y": 180
+    },
+    "facing=south,horizontal=middle,vertical=single": {
+      "model": "computah:block/screen_middle_single",
+      "y": 180
+    },
+    "facing=south,horizontal=middle,vertical=first": {
+      "model": "computah:block/screen_middle_first",
+      "y": 180
+    },
+    "facing=south,horizontal=middle,vertical=middle": {
+      "model": "computah:block/screen_middle_middle",
+      "y": 180
+    },
+    "facing=south,horizontal=middle,vertical=last": {
+      "model": "computah:block/screen_middle_last",
+      "y": 180
+    },
+    "facing=south,horizontal=last,vertical=single": {
+      "model": "computah:block/screen_last_single",
+      "y": 180
+    },
+    "facing=south,horizontal=last,vertical=first": {
+      "model": "computah:block/screen_last_first",
+      "y": 180
+    },
+    "facing=south,horizontal=last,vertical=middle": {
+      "model": "computah:block/screen_last_middle",
+      "y": 180
+    },
+    "facing=south,horizontal=last,vertical=last": {
+      "model": "computah:block/screen_last_last",
+      "y": 180
+    },
+    "facing=west,horizontal=single,vertical=single": {
+      "model": "computah:block/screen_single_single",
+      "y": 270
+    },
+    "facing=west,horizontal=single,vertical=first": {
+      "model": "computah:block/screen_single_first",
+      "y": 270
+    },
+    "facing=west,horizontal=single,vertical=middle": {
+      "model": "computah:block/screen_single_middle",
+      "y": 270
+    },
+    "facing=west,horizontal=single,vertical=last": {
+      "model": "computah:block/screen_single_last",
+      "y": 270
+    },
+    "facing=west,horizontal=first,vertical=single": {
+      "model": "computah:block/screen_first_single",
+      "y": 270
+    },
+    "facing=west,horizontal=first,vertical=first": {
+      "model": "computah:block/screen_first_first",
+      "y": 270
+    },
+    "facing=west,horizontal=first,vertical=middle": {
+      "model": "computah:block/screen_first_middle",
+      "y": 270
+    },
+    "facing=west,horizontal=first,vertical=last": {
+      "model": "computah:block/screen_first_last",
+      "y": 270
+    },
+    "facing=west,horizontal=middle,vertical=single": {
+      "model": "computah:block/screen_middle_single",
+      "y": 270
+    },
+    "facing=west,horizontal=middle,vertical=first": {
+      "model": "computah:block/screen_middle_first",
+      "y": 270
+    },
+    "facing=west,horizontal=middle,vertical=middle": {
+      "model": "computah:block/screen_middle_middle",
+      "y": 270
+    },
+    "facing=west,horizontal=middle,vertical=last": {
+      "model": "computah:block/screen_middle_last",
+      "y": 270
+    },
+    "facing=west,horizontal=last,vertical=single": {
+      "model": "computah:block/screen_last_single",
+      "y": 270
+    },
+    "facing=west,horizontal=last,vertical=first": {
+      "model": "computah:block/screen_last_first",
+      "y": 270
+    },
+    "facing=west,horizontal=last,vertical=middle": {
+      "model": "computah:block/screen_last_middle",
+      "y": 270
+    },
+    "facing=west,horizontal=last,vertical=last": {
+      "model": "computah:block/screen_last_last",
       "y": 270
     }
   }

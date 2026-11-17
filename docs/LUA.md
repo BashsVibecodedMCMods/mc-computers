@@ -23,7 +23,7 @@ components, precompiled bytecode. Computah OS provides `io`, `print`, `require` 
 | Limit | Value |
 |---|---|
 | Time without yielding | 5 s (config `machines.timeout`), then an error; 2 s later a hard stop. |
-| Memory | Sum of installed RAM: 384 KiB, 768 KiB, 1.5 MiB or 3 MiB per module. Measured approximately. |
+| Memory | Sum of installed RAM: 512 KiB, 1 MiB, 2 MiB or 4 MiB per module. Measured approximately. |
 | Signal queue | 256 signals. |
 | Components | CPU tier 1: 8, tier 2: 12, tier 3: 16 (besides the computer itself and its tmpfs). |
 | Rate-limited calls | Per-tick budgets (CPU and GPU tiers); calls over budget wait a tick. |

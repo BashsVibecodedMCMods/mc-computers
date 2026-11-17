@@ -2,8 +2,8 @@ package dev.computah.machine;
 
 import dev.computah.api.Component;
 import dev.computah.component.CallbackRegistry;
-import org.squiddev.cobalt.*;
-import org.squiddev.cobalt.function.LibFunction;
+import dev.computah.repack.cobalt.*;
+import dev.computah.repack.cobalt.function.LibFunction;
 
 import java.nio.charset.StandardCharsets;
 import java.time.*;

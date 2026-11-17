@@ -138,7 +138,7 @@ public class ComputahGameTests {
     public static void computerBootsAndRunsEeprom(GameTestHelper helper) {
         configure();
         CaseBlockEntity be = computer(helper, new BlockPos(1, 1, 1), "result('booted ' .. computer.totalMemory()) while true do computer.pullSignal() end");
-        waitForResult(helper, () -> be.core().machine(), "booted 3145728", () -> {
+        waitForResult(helper, () -> be.core().machine(), "booted 4194304", () -> {
             helper.assertBlockProperty(new BlockPos(1, 1, 1), CaseBlock.RUNNING, true);
             be.core().stop();
         });
@@ -206,6 +206,14 @@ public class ComputahGameTests {
                     int[] widths = new int[10];
                     for (int x = 0; x < 10; x++) widths[x] = ((ScreenBlockEntity) helper.getBlockEntity(new BlockPos(1 + x, 1, 4))).width();
                     for (int w : widths) shapes.add(String.valueOf(w));
+                    java.util.Set<ScreenBlock.Part> parts = new java.util.HashSet<>();
+                    for (int x = 0; x < 3; x++) {
+                        BlockState st = helper.getBlockState(new BlockPos(1 + x, 2, 1));
+                        parts.add(st.getValue(ScreenBlock.HORIZONTAL));
+                        helper.assertTrue(st.getValue(ScreenBlock.VERTICAL) == ScreenBlock.Part.FIRST, "top row is FIRST vertically");
+                    }
+                    helper.assertTrue(parts.equals(java.util.EnumSet.of(ScreenBlock.Part.FIRST, ScreenBlock.Part.MIDDLE, ScreenBlock.Part.LAST)),
+                            "bezel parts across the top row: " + parts);
                     helper.assertTrue(widths[0] == 8 && widths[9] == 2 || widths[0] == 2 && widths[9] == 8, "row split 8+2, got " + shapes);
                 })
                 .thenExecute(() -> helper.setBlock(new BlockPos(2, 1, 1), Blocks.AIR))

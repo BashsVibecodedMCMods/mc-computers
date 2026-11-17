@@ -1,10 +1,10 @@
 package dev.computah.api;
 
 import dev.computah.machine.LuaConverter;
-import org.squiddev.cobalt.LuaError;
-import org.squiddev.cobalt.LuaString;
-import org.squiddev.cobalt.LuaValue;
-import org.squiddev.cobalt.Varargs;
+import dev.computah.repack.cobalt.LuaError;
+import dev.computah.repack.cobalt.LuaString;
+import dev.computah.repack.cobalt.LuaValue;
+import dev.computah.repack.cobalt.Varargs;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -38,15 +38,15 @@ public final class Arguments {
     }
 
     public boolean isNumber(int i) {
-        return raw(i).type() == org.squiddev.cobalt.Constants.TNUMBER;
+        return raw(i).type() == dev.computah.repack.cobalt.Constants.TNUMBER;
     }
 
     public boolean isTable(int i) {
-        return raw(i).type() == org.squiddev.cobalt.Constants.TTABLE;
+        return raw(i).type() == dev.computah.repack.cobalt.Constants.TTABLE;
     }
 
     public boolean isBoolean(int i) {
-        return raw(i).type() == org.squiddev.cobalt.Constants.TBOOLEAN;
+        return raw(i).type() == dev.computah.repack.cobalt.Constants.TBOOLEAN;
     }
 
     private ComponentException bad(int i, String expected) {
@@ -79,7 +79,7 @@ public final class Arguments {
 
     public double checkDouble(int i) throws ComponentException {
         LuaValue v = raw(i);
-        if (v.type() == org.squiddev.cobalt.Constants.TNUMBER) return v.toDouble();
+        if (v.type() == dev.computah.repack.cobalt.Constants.TNUMBER) return v.toDouble();
         if (v instanceof LuaString) {
             LuaValue n = v.toNumber();
             if (!n.isNil()) return n.toDouble();
@@ -103,7 +103,7 @@ public final class Arguments {
 
     public boolean checkBoolean(int i) throws ComponentException {
         LuaValue v = raw(i);
-        if (v.type() != org.squiddev.cobalt.Constants.TBOOLEAN) throw bad(i, "boolean");
+        if (v.type() != dev.computah.repack.cobalt.Constants.TBOOLEAN) throw bad(i, "boolean");
         return v.toBoolean();
     }
 

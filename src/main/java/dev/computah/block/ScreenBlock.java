@@ -26,12 +26,32 @@ import org.jetbrains.annotations.Nullable;
  * sneaking) a right-click on the face sends a touch signal on tier 2 and 3 screens.
  */
 public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlock {
+    /** Where a block sits in its monitor, so the bezel textures connect: horizontally (viewer's left to right) and vertically. */
+    public enum Part implements net.minecraft.util.StringRepresentable {
+        SINGLE, FIRST, MIDDLE, LAST;
+
+        public static Part of(int index, int size) {
+            return size <= 1 ? SINGLE : index == 0 ? FIRST : index == size - 1 ? LAST : MIDDLE;
+        }
+
+        @Override
+        public String getSerializedName() {
+            return name().toLowerCase(java.util.Locale.ROOT);
+        }
+    }
+
+    public static final net.minecraft.world.level.block.state.properties.EnumProperty<Part> HORIZONTAL =
+            net.minecraft.world.level.block.state.properties.EnumProperty.create("horizontal", Part.class);
+    public static final net.minecraft.world.level.block.state.properties.EnumProperty<Part> VERTICAL =
+            net.minecraft.world.level.block.state.properties.EnumProperty.create("vertical", Part.class);
+
     private final int tier;
 
     public ScreenBlock(BlockBehaviour.Properties properties, int tier) {
         super(properties);
         this.tier = tier;
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH)
+                .setValue(HORIZONTAL, Part.SINGLE).setValue(VERTICAL, Part.SINGLE));
     }
 
     public int tier() {
@@ -45,7 +65,7 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, HORIZONTAL, VERTICAL);
     }
 
     @Override

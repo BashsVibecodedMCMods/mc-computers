@@ -160,6 +160,12 @@ public class ScreenBlockEntity extends MemberBlockEntity {
             component.setSize(width, height);
         }
         if (wasOrigin != isOrigin() || isOrigin()) dev.computah.network.NetworkManager.bump(level);
+        if (level != null) {
+            BlockState state = getBlockState();
+            BlockState shaped = state.setValue(ScreenBlock.HORIZONTAL, ScreenBlock.Part.of(gx, width))
+                    .setValue(ScreenBlock.VERTICAL, ScreenBlock.Part.of(gy, height));
+            if (shaped != state) level.setBlock(worldPosition, shaped, 3);
+        }
         sync();
     }
 

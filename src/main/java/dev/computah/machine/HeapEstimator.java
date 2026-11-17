@@ -1,9 +1,9 @@
 package dev.computah.machine;
 
-import org.squiddev.cobalt.*;
-import org.squiddev.cobalt.debug.DebugFrame;
-import org.squiddev.cobalt.debug.Upvalue;
-import org.squiddev.cobalt.function.LuaInterpretedFunction;
+import dev.computah.repack.cobalt.*;
+import dev.computah.repack.cobalt.debug.DebugFrame;
+import dev.computah.repack.cobalt.debug.Upvalue;
+import dev.computah.repack.cobalt.function.LuaInterpretedFunction;
 
 import java.util.ArrayDeque;
 import java.util.IdentityHashMap;

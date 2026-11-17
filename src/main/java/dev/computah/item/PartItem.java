@@ -16,7 +16,7 @@ import java.util.List;
 
 /** A computer part: CPU, RAM, drive, EEPROM or card. */
 public class PartItem extends Item {
-    public static final long[] RAM_SIZES = {0, 384 * 1024, 768 * 1024, 1536 * 1024, 3072 * 1024};
+    public static final long[] RAM_SIZES = {0, 512 * 1024, 1024 * 1024, 2048 * 1024, 4096 * 1024};
     public static final long[] HDD_SIZES = {0, 1024 * 1024, 2048 * 1024, 4096 * 1024};
     public static final long FLOPPY_SIZE = 512 * 1024;
     public static final int[] CPU_COMPONENTS = {0, 8, 12, 16};

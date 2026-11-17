@@ -1,7 +1,10 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id 'java-library'
     id 'idea'
     id 'net.neoforged.moddev' version '2.0.148'
+    id 'com.gradleup.shadow' version '8.3.6' apply false
 }
 
 version = mod_version
@@ -59,11 +62,29 @@ neoForge {
     }
 }
 
+// Cobalt, the pure-Java Lua 5.2 VM (MIT), is repackaged into dev.computah.repack and shipped inside our jar. Saving
+// running computers reads Cobalt's internals, so we must always run with exactly this version, and never with the
+// copy another mod (CC: Tweaked) brings along.
+configurations {
+    cobalt
+}
+
+var relocateCobalt = tasks.register('relocateCobalt', ShadowJar) {
+    configurations = [project.configurations.cobalt]
+    archiveBaseName = 'cobalt-relocated'
+    archiveVersion = cobalt_version
+    archiveClassifier = ''
+    destinationDirectory = layout.buildDirectory.dir('relocated')
+    relocate 'org.squiddev.cobalt', 'dev.computah.repack.cobalt'
+    relocate 'cc.tweaked.cobalt', 'dev.computah.repack.cobaltinternal'
+    exclude 'module-info.class', 'META-INF/maven/**', 'META-INF/*.MF'
+}
+var relocatedCobalt = files(relocateCobalt.flatMap { it.archiveFile }).builtBy(relocateCobalt)
+
 dependencies {
-    // Cobalt: the pure-Java Lua 5.2 VM (MIT). Shipped inside our jar with jarJar; this mod does not need CC: Tweaked.
-    implementation "cc.tweaked:cobalt:${cobalt_version}"
-    jarJar("cc.tweaked:cobalt:${cobalt_version}") { version { strictly "[${cobalt_version},)"; prefer cobalt_version } }
-    additionalRuntimeClasspath "cc.tweaked:cobalt:${cobalt_version}"
+    cobalt "cc.tweaked:cobalt:${cobalt_version}"
+    implementation relocatedCobalt
+    additionalRuntimeClasspath relocatedCobalt
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -99,6 +120,10 @@ neoForge.ideSyncTask generateModMetadata
 tasks.named('jar') {
     exclude 'dev/computah/test/**'
     exclude 'data/computah/structure/**'
+    from(relocateCobalt.flatMap { it.archiveFile }.map { zipTree(it) }) {
+        exclude 'META-INF/**'
+    }
+    from('CREDITS.md')
 }
 
 tasks.withType(JavaCompile).configureEach {
