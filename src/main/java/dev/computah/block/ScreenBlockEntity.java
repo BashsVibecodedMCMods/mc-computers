@@ -163,10 +163,15 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         sync();
     }
 
+    private boolean lastSentOn = true;
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, ScreenBlockEntity be) {
         if (!be.isOrigin() || be.buffer == null) return;
         byte[] log = be.buffer.takeLog();
-        if (log == null) return;
+        boolean on = be.screenOn();
+        if (log == null && on == be.lastSentOn) return;
+        be.lastSentOn = on;
+        if (log == null) log = new byte[0];
         boolean snapshot = log.length > MAX_LOG;
         byte[] data = snapshot ? be.buffer.snapshot() : log;
         PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level, new ChunkPos(pos), DisplayPayload.of(pos, data, snapshot, be.screenOn()));

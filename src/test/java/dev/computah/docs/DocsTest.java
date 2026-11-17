@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /** docs/COMPONENTS.md must list every component method (regenerate it with tools/components_doc.py). */
 public class DocsTest {
     private static Path projectFile(String name) throws Exception {
-        Path p = Path.of(DocsTest.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toAbsolutePath();
+        Path p = Path.of(System.getProperty("user.dir")).toAbsolutePath();
         while (p != null && !Files.exists(p.resolve(name))) p = p.getParent();
         assertNotNull(p, "can't find " + name);
         return p.resolve(name);

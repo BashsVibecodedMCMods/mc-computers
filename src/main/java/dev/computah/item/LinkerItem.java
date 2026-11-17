@@ -38,6 +38,12 @@ public class LinkerItem extends Item {
         return be instanceof CaseBlockEntity || be instanceof RackBlockEntity;
     }
 
+    /** Runs before the clicked block's own interaction, so clicking a case selects it instead of opening its GUI. */
+    @Override
+    public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext ctx) {
+        return useOn(ctx);
+    }
+
     @Override
     public InteractionResult useOn(UseOnContext ctx) {
         Level level = ctx.getLevel();
