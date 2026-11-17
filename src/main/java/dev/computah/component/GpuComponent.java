@@ -302,6 +302,18 @@ public class GpuComponent extends Component implements PersistentComponent {
         return new Object[]{changed};
     }
 
+    @Callback(doc = "function():number, number -- The resolution that fills the bound monitor's shape without borders (most rows within maxResolution). Apply it with setResolution(getFitResolution()).")
+    public Object[] getFitResolution(Context ctx, Arguments args) throws ComponentException {
+        ScreenComponent s;
+        synchronized (this) {
+            s = screen;
+        }
+        if (s == null) throw new ComponentException("no screen");
+        DisplayBuffer.Tier t = effectiveTier(s.buffer());
+        int[] fit = dev.computah.display.ScreenGeometry.fitResolution(s.blocksWide(), s.blocksHigh(), t.cols(), t.rows());
+        return new Object[]{fit[0], fit[1]};
+    }
+
     @Callback(doc = "function():number, number -- Same as getResolution (kept for OpenComputers programs).")
     public Object[] getViewport(Context ctx, Arguments args) throws ComponentException {
         return getResolution(ctx, args);

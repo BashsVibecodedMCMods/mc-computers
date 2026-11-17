@@ -148,7 +148,8 @@ public class DiskDriveBlockEntity extends MemberBlockEntity implements SimpleEnt
         mediaAddress = addr;
         if (addr != null && stack.getItem() instanceof PartItem p) {
             final String a = addr;
-            FilesystemComponent.Label label = p.kind() == PartKind.OS_FLOPPY ? FilesystemComponent.fixedLabel("Computah OS") : new FilesystemComponent.Label() {
+            boolean os = PartItem.isOsFloppy(stack);
+            FilesystemComponent.Label label = os ? FilesystemComponent.fixedLabel("Computah OS") : new FilesystemComponent.Label() {
                 @Override
                 public String get() {
                     ItemStack s = slot.getItem(0);
@@ -165,8 +166,9 @@ public class DiskDriveBlockEntity extends MemberBlockEntity implements SimpleEnt
                     return true;
                 }
             };
-            media = new FilesystemComponent(p.kind() == PartKind.OS_FLOPPY ? OsFiles.fileSystem()
-                    : new DirectoryFileSystem(HostCore.fsRoot(server).resolve(addr), PartItem.FLOPPY_SIZE), addr, label);
+            media = new FilesystemComponent(os ? OsFiles.fileSystem()
+                    : new DirectoryFileSystem(HostCore.fsRoot(server).resolve(addr), PartItem.floppySize()), addr, label);
+            media.setTiming(dev.computah.fs.DriveTiming.floppy());
             media.setActivityListener(w -> activity.set(true));
         }
         if (ticks > 1) {

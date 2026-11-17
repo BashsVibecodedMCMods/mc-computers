@@ -43,6 +43,7 @@ public final class OsFiles {
                 Computah.LOG.warn("Failed to read OS file {}", e.getKey(), ex);
             }
         }
+        addBios(out);
         files = Map.copyOf(out);
         Computah.LOG.info("Loaded {} Computah OS files", out.size());
     }
@@ -55,6 +56,12 @@ public final class OsFiles {
                 if (Files.isRegularFile(p)) out.put(dir.relativize(p).toString().replace('\\', '/'), Files.readAllBytes(p));
             }
         }
+        addBios(out);
         files = Map.copyOf(out);
+    }
+
+    /** The stock BIOS is on the disk as /lib/bios.lua (for `flash --bios`), from the same file the BIOS recipe uses. */
+    private static void addBios(Map<String, byte[]> out) {
+        out.putIfAbsent("lib/bios.lua", dev.computah.item.PartItem.biosCode().getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 }

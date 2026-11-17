@@ -67,4 +67,23 @@ public final class ClientSetup {
                 ModBlocks.CASE1.get(), ModBlocks.CASE2.get(), ModBlocks.CASE3.get(),
                 ModBlocks.SCREEN1.get(), ModBlocks.SCREEN2.get(), ModBlocks.SCREEN3.get());
     }
+
+    @SubscribeEvent
+    public static void floppyColors(RegisterColorHandlersEvent.Item event) {
+        // Dyed floppies: the body mask (layer 1) takes the vanilla dye colour.
+        event.register((stack, tint) -> {
+            if (tint != 1) return 0xFFFFFFFF;
+            net.minecraft.world.item.DyeColor c = stack.get(dev.computah.registry.ModComponents.FLOPPY_COLOR.get());
+            return c == null ? 0xFFFFFFFF : 0xFF000000 | c.getTextureDiffuseColor();
+        }, dev.computah.registry.ModItems.FLOPPY.get());
+    }
+
+    @SubscribeEvent
+    public static void itemProperties(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
+        event.enqueueWork(() -> net.minecraft.client.renderer.item.ItemProperties.register(dev.computah.registry.ModItems.FLOPPY.get(),
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Computah.MOD_ID, "variant"), (stack, level, entity, seed) -> {
+                    if (stack.has(dev.computah.registry.ModComponents.FLOPPY_COLOR.get())) return 1.0f;
+                    return dev.computah.item.PartItem.isOsFloppy(stack) ? 0.5f : 0.0f;
+                }));
+    }
 }

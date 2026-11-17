@@ -2,7 +2,7 @@ package dev.computah.item;
 
 /** The kinds of parts that go into computer cases and servers, and which slot type each needs. */
 public enum PartKind {
-    CPU(SlotType.CPU), RAM(SlotType.RAM), HDD(SlotType.HDD), FLOPPY(SlotType.FLOPPY), OS_FLOPPY(SlotType.FLOPPY),
+    CPU(SlotType.CPU), RAM(SlotType.RAM), HDD(SlotType.HDD), FLOPPY(SlotType.FLOPPY),
     EEPROM(SlotType.EEPROM), GPU(SlotType.CARD), NETWORK_CARD(SlotType.CARD), WIRELESS_CARD(SlotType.CARD),
     REDSTONE_CARD(SlotType.CARD);
 

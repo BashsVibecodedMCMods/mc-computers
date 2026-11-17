@@ -6,8 +6,17 @@
 --   flash -c              show size, checksum and whether it is read-only
 --   flash -e              erase the code
 --   flash --lock          make the EEPROM read-only forever (code and label)
+--   flash --bios          write the stock Lua BIOS (/lib/bios.lua) to the EEPROM
+--   -w                    first wait until an EEPROM is swapped in (to program blank EEPROMs while the OS runs)
 local shell = require("shell")
 local args, options = shell.parse(...)
+if options.w then
+  local event = require("event")
+  io.write("swap the EEPROM now (Ctrl+C to cancel)...\n")
+  local address = event.pull("component_added", nil, "eeprom")
+  if not address then return 1 end
+  component.setPrimary("eeprom", address)
+end
 local eeprom = component.getPrimary("eeprom", true)
 if not eeprom then
   io.stderr:write("flash: no EEPROM installed\n")
@@ -59,8 +68,9 @@ elseif options.lock then
   end
 else
   local path = args[1]
+  if options.bios then path = "/lib/bios.lua" end
   if not path then
-    io.write("usage: flash [-q] <file> | -r <file> | -l [label] | -d [data] | -c | -e | --lock\n")
+    io.write("usage: flash [-qw] <file> | --bios | -r <file> | -l [label] | -d [data] | -c | -e | --lock\n")
     return 1
   end
   local f, reason = io.open(path, "rb")
@@ -79,6 +89,7 @@ else
   if not confirm("Write " .. #code .. " bytes to the EEPROM?") then return end
   local ok, e = pcall(eeprom.set, code)
   if not ok then io.stderr:write("flash: " .. tostring(e) .. "\n") return 1 end
-  if options.l and args[2] then eeprom.setLabel(args[2]) end
+  if options.bios then eeprom.setLabel("Lua BIOS")
+  elseif options.l and args[2] then eeprom.setLabel(args[2]) end
   io.write("flashed " .. #code .. " bytes (checksum " .. eeprom.getChecksum() .. ")\n")
 end

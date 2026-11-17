@@ -50,6 +50,7 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
     private final Map<Integer, Open> handles = new HashMap<>();
     private int nextHandle = 1;
     private volatile @Nullable Consumer<Boolean> activityListener;
+    private volatile @Nullable dev.computah.fs.DriveTiming timing;
 
     public FilesystemComponent(FileSystem fs, String address, Label label) {
         this.fs = fs;
@@ -78,6 +79,20 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
     /** Called with true for writes and false for reads, so the host can play drive sounds. */
     public void setActivityListener(@Nullable Consumer<Boolean> listener) {
         this.activityListener = listener;
+    }
+
+    /** Makes operations take time like a real drive (null = instant). */
+    public void setTiming(@Nullable dev.computah.fs.DriveTiming timing) {
+        this.timing = timing;
+    }
+
+    public @Nullable dev.computah.fs.DriveTiming timing() {
+        return timing;
+    }
+
+    private void seekCost(Context ctx) {
+        dev.computah.fs.DriveTiming t = timing;
+        if (t != null) t.seek(ctx);
     }
 
     private void activity(boolean write) {
@@ -217,27 +232,37 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
 
     @Callback(doc = "function(path:string):boolean -- Whether an object exists at the path.")
     public Object[] exists(Context ctx, Arguments args) throws ComponentException {
-        return new Object[]{fs.exists(path(args, 0))};
+        String path = path(args, 0);
+        seekCost(ctx);
+        return new Object[]{fs.exists(path)};
     }
 
     @Callback(doc = "function(path:string):boolean -- Whether the path is a directory.")
     public Object[] isDirectory(Context ctx, Arguments args) throws ComponentException {
-        return new Object[]{fs.isDirectory(path(args, 0))};
+        String path = path(args, 0);
+        seekCost(ctx);
+        return new Object[]{fs.isDirectory(path)};
     }
 
     @Callback(doc = "function(path:string):number -- The size of the file in bytes (0 for directories).")
     public Object[] size(Context ctx, Arguments args) throws ComponentException {
-        return new Object[]{fs.size(path(args, 0))};
+        String path = path(args, 0);
+        seekCost(ctx);
+        return new Object[]{fs.size(path)};
     }
 
     @Callback(doc = "function(path:string):number -- When the object was last modified, in milliseconds since the epoch.")
     public Object[] lastModified(Context ctx, Arguments args) throws ComponentException {
-        return new Object[]{fs.lastModified(path(args, 0))};
+        String path = path(args, 0);
+        seekCost(ctx);
+        return new Object[]{fs.lastModified(path)};
     }
 
     @Callback(doc = "function(path:string):table -- The entries of a directory; directories end with '/'.")
     public Object[] list(Context ctx, Arguments args) throws ComponentException {
-        List<String> l = fs.list(path(args, 0));
+        String path = path(args, 0);
+        seekCost(ctx);
+        List<String> l = fs.list(path);
         if (l == null) return new Object[]{null, "no such directory"};
         activity(false);
         return new Object[]{l};
@@ -245,9 +270,11 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
 
     @Callback(doc = "function(path:string):boolean -- Creates a directory, and any missing parents.")
     public Object[] makeDirectory(Context ctx, Arguments args) throws ComponentException {
+        String path = path(args, 0);
+        seekCost(ctx);
         try {
             activity(true);
-            return new Object[]{fs.makeDirectory(path(args, 0))};
+            return new Object[]{fs.makeDirectory(path)};
         } catch (IOException e) {
             throw new ComponentException(e.getMessage());
         }
@@ -255,9 +282,11 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
 
     @Callback(doc = "function(path:string):boolean -- Removes a file or a directory with everything in it.")
     public Object[] remove(Context ctx, Arguments args) throws ComponentException {
+        String path = path(args, 0);
+        seekCost(ctx);
         try {
             activity(true);
-            return new Object[]{fs.remove(path(args, 0))};
+            return new Object[]{fs.remove(path)};
         } catch (IOException e) {
             throw new ComponentException(e.getMessage());
         }
@@ -265,9 +294,11 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
 
     @Callback(doc = "function(from:string, to:string):boolean -- Renames or moves an object.")
     public Object[] rename(Context ctx, Arguments args) throws ComponentException {
+        String from = path(args, 0), to = path(args, 1);
+        seekCost(ctx);
         try {
             activity(true);
-            return new Object[]{fs.rename(path(args, 0), path(args, 1))};
+            return new Object[]{fs.rename(from, to)};
         } catch (IOException e) {
             throw new ComponentException(e.getMessage());
         }
@@ -287,6 +318,7 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
             long mine = handles.values().stream().filter(o -> o.owner() == ctx.machine()).count();
             if (mine >= MAX_HANDLES) throw new ComponentException("too many open handles");
         }
+        seekCost(ctx);
         try {
             FileSystem.Handle h = fs.open(p, mode);
             activity(mode != FileSystem.Mode.READ);
@@ -304,6 +336,15 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
     public Object[] read(Context ctx, Arguments args) throws ComponentException {
         Open o = handle(ctx, args);
         int n = Math.max(0, Math.min(MAX_READ, args.checkInteger(1)));
+        dev.computah.fs.DriveTiming t = timing;
+        if (t != null && !ctx.synchronous()) {
+            long remaining = n;
+            try {
+                remaining = Math.max(0, Math.min(n, fs.size(o.path()) - o.handle().seek("cur", 0)));
+            } catch (IOException ignored) {
+            }
+            t.read(ctx, remaining);
+        }
         try {
             activity(false);
             byte[] data = o.handle().read(n);
@@ -316,9 +357,12 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
     @Callback(doc = "function(handle:number, data:string):boolean -- Writes data to the file.")
     public Object[] write(Context ctx, Arguments args) throws ComponentException {
         Open o = handle(ctx, args);
+        byte[] data = args.checkBytes(1);
+        dev.computah.fs.DriveTiming t = timing;
+        if (t != null) t.write(ctx, data.length);
         try {
             activity(true);
-            o.handle().write(args.checkBytes(1));
+            o.handle().write(data);
             return new Object[]{true};
         } catch (IOException e) {
             return new Object[]{null, e.getMessage()};

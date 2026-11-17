@@ -1,0 +1,19 @@
+{
+  "type": "computah:floppy_dye",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "computah:floppy"
+    },
+    {
+      "tag": "c:dyes/orange"
+    }
+  ],
+  "result": {
+    "id": "computah:floppy",
+    "count": 1,
+    "components": {
+      "computah:floppy_color": "orange"
+    }
+  }
+}

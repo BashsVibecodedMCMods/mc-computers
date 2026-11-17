@@ -50,6 +50,13 @@ public final class TestMachines {
             return new Object[]{"server:" + Thread.currentThread().getName().startsWith("Computah-Machine")};
         }
 
+        /** Takes 10 ticks (like a slow drive): delays itself unless the call already waited. */
+        @Callback
+        public Object[] slow(Context ctx, Arguments args) {
+            if (!ctx.synchronous()) throw new dev.computah.api.DelayException(10);
+            return new Object[]{"done"};
+        }
+
         @Callback(limit = 2)
         public Object[] limited(Context ctx, Arguments args) {
             return new Object[]{true};

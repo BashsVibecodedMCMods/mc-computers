@@ -72,6 +72,7 @@ Graphics card. Coordinates start at 1. See GRAPHICS.md.
 - `maxResolution():number, number` — The largest text resolution of this GPU and screen.
 - `getResolution():number, number` — The current text resolution.
 - `setResolution(width:number, height:number):boolean` — Sets the text resolution.
+- `getFitResolution():number, number` — The resolution that fills the bound monitor's shape without borders (most rows within maxResolution). Apply it with setResolution(getFitResolution()).
 - `getViewport():number, number` — Same as getResolution (kept for OpenComputers programs).
 - `setViewport(width:number, height:number):boolean` — Same as setResolution.
 - `get(x:number, y:number):string, number, number, nil, nil, table` — The character, foreground, background and style at a cell.

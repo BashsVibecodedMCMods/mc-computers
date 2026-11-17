@@ -50,13 +50,20 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Version
+        id: version
+        run: |
+          # The workflow run number is the build number, appended to the mod version: 0.1.5+build.42.
+          version="$(sed -n 's/^mod_version=//p' gradle.properties)+build.${{ github.run_number }}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Building $version"
       - name: Build
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon -Pbuild_number=${{ github.run_number }}
       - name: Game tests
-        run: ./gradlew runGameTestServer --no-daemon
+        run: ./gradlew runGameTestServer --no-daemon -Pbuild_number=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
-          name: computah
+          name: computah-${{ steps.version.outputs.version }}
           path: build/libs/*.jar
       - name: Publish release
         if: steps.tag.outputs.tag != ''

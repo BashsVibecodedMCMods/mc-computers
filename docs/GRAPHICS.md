@@ -103,8 +103,23 @@ graphics.saveImage("/home/shot.cpi", graphics.capture(1, 1, 64, 64))
 Screens of the same tier and facing placed next to each other merge into one monitor, up to **8 blocks wide and
 6 blocks high**; larger arrangements split into several monitors. The bezel textures connect, so a monitor has one
 frame around its outside and no seams between its blocks. A monitor keeps its picture when the world reloads. It is dark while no running computer uses it (except to show
-the error of a computer that crashed), and lights up again when a computer that sees it starts. The resolution does not change with size – a
-bigger monitor shows the same image larger. Attach a **keyboard** to any block of the monitor (place it on the
+the error of a computer that crashed), and lights up again when a computer that sees it starts. As in OpenComputers, the resolution
+does not change with size: binding a GPU sets the maximum resolution, and the image keeps its shape, so a long or tall
+monitor shows it with borders.
+
+### Signage: fitting the resolution to the monitor
+
+`gpu.getFitResolution()` returns the resolution that fills the bound monitor without borders: the most rows (the most
+detail) whose cells match the monitor's shape, within `maxResolution`. It only calculates; apply it yourself, for
+example at the start of a sign program (binding again, as every boot does, resets to the maximum):
+
+```lua
+local gpu = component.gpu
+gpu.setResolution(gpu.getFitResolution())   -- an 8x1 tier 3 monitor: 145x7, a 1x6 one: 13x50
+```
+
+From the shell, `resolution fit` does the same, and `resolution` prints the current, maximum and fitted values.
+`screen.getAspectRatio()` returns the monitor's size in blocks if you want to calculate your own. Attach a **keyboard** to any block of the monitor (place it on the
 screen) to type: right-click the monitor or keyboard to open the screen GUI. On tier 2 and 3 monitors, clicks in
 the GUI and right-clicks on the monitor face (sneak, or without a keyboard) send `touch` signals with the cell
 coordinates; `screen.setPrecise(true)` gives fractional coordinates.

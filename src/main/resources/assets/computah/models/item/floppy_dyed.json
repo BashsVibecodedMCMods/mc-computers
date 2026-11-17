@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "computah:item/floppy",
+    "layer1": "computah:item/floppy_tint"
+  }
+}

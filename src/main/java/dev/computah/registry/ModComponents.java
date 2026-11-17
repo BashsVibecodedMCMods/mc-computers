@@ -62,6 +62,14 @@ public final class ModComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<EepromData>> EEPROM = REGISTER.registerComponentType("eeprom",
             b -> b.persistent(EepromData.CODEC).networkSynchronized(EepromData.STREAM));
 
+    /** Marks a floppy as the read-only Computah OS disk. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<net.minecraft.util.Unit>> OS_DISK = REGISTER.registerComponentType("os_disk",
+            b -> b.persistent(net.minecraft.util.Unit.CODEC).networkSynchronized(StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+
+    /** The dye colour of a floppy (vanilla dye colours). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<net.minecraft.world.item.DyeColor>> FLOPPY_COLOR = REGISTER.registerComponentType("floppy_color",
+            b -> b.persistent(net.minecraft.world.item.DyeColor.CODEC).networkSynchronized(net.minecraft.world.item.DyeColor.STREAM_CODEC));
+
     /** The host a linker has selected. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<GlobalPos>> SELECTED_HOST = REGISTER.registerComponentType("selected_host",
             b -> b.persistent(GlobalPos.CODEC).networkSynchronized(GlobalPos.STREAM_CODEC));

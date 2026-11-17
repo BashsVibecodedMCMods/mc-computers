@@ -64,6 +64,13 @@ public class ComputahGameTests {
         Config.LINK_RANGE.set(64);
         Config.WIRELESS_RANGE.set(400);
         Config.MAX_LINKS.set(32);
+        // Instant drives keep tests fast; driveSpeedIsSimulated turns simulation on for itself.
+        Config.DRIVE_SIMULATE.set(false);
+        Config.DRIVE_SPEED.set(1.0);
+        Config.RAM_KIB.set(List.of(512, 1024, 2048, 4096));
+        Config.HDD_KIB.set(List.of(1024, 2048, 4096));
+        Config.FLOPPY_KIB.set(512);
+        Config.TMPFS_KIB.set(64);
     }
 
     private static ItemStack eeprom(String code) {
@@ -199,6 +206,95 @@ public class ComputahGameTests {
                     helper.assertFalse(screen.screenOn(), "screen goes dark when the computer is off");
                 })
                 .thenSucceed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = TIMEOUT, batch = "computah_drives")
+    public static void driveSpeedIsSimulated(GameTestHelper helper) {
+        configure();
+        Config.DRIVE_SIMULATE.set(true);
+        Config.HDD_READ.set(64.0);
+        Config.HDD_WRITE.set(48.0);
+        Config.HDD_SEEK.set(5);
+        // 32 KiB written at 48 KiB/s and read back at 64 KiB/s on a tier 1 drive: at least 1.1 s of game time.
+        CaseBlockEntity be = computer(helper, new BlockPos(1, 1, 1), """
+                local fs
+                for a in component.list("filesystem") do
+                  if a ~= computer.tmpAddress() then fs = a end
+                end
+                local chunk = string.rep("x", 4096)
+                local t0 = computer.uptime()
+                local h = component.invoke(fs, "open", "/big.bin", "w")
+                for i = 1, 8 do component.invoke(fs, "write", h, chunk) end
+                component.invoke(fs, "close", h)
+                h = component.invoke(fs, "open", "/big.bin", "r")
+                local n = 0
+                while true do
+                  local d = component.invoke(fs, "read", h, 4096)
+                  if not d then break end
+                  n = n + #d
+                end
+                component.invoke(fs, "close", h)
+                local ms = math.floor((computer.uptime() - t0) * 1000)
+                result(n == 32768 and ms or -2)
+                while true do computer.pullSignal() end
+                """);
+        helper.startSequence()
+                .thenIdle(2)
+                .thenExecute(() -> be.core().start())
+                .thenWaitUntil(() -> {
+                    Machine m = be.core().machine();
+                    if (m.state() == Machine.State.CRASHED) throw new GameTestAssertException("crashed: " + m.crashMessage());
+                    long ms = number(readResult(m));
+                    if (ms < 0) throw new GameTestAssertException("no result yet: " + readResult(m));
+                    helper.assertTrue(ms >= 1100, "32 KiB took only " + ms + " ms");
+                })
+                .thenExecute(() -> {
+                    be.core().stop();
+                    Config.DRIVE_SIMULATE.set(false);
+                })
+                .thenSucceed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = TIMEOUT, batch = "computah_fit")
+    public static void monitorFitResolution(GameTestHelper helper) {
+        configure();
+        helper.setBlock(new BlockPos(2, 1, 1), ModBlocks.CABLE.get());
+        helper.setBlock(new BlockPos(3, 1, 1), ModBlocks.CABLE.get());
+        for (int x = 4; x < 8; x++) {
+            helper.setBlock(new BlockPos(x, 1, 1), ModBlocks.SCREEN3.get().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
+        }
+        int[] fit = dev.computah.display.ScreenGeometry.fitResolution(4, 1, 160, 50);
+        String expected = fit[0] + "x" + fit[1];
+        CaseBlockEntity be = computer(helper, new BlockPos(1, 1, 1), """
+                local gpu = component.list("gpu")()
+                local screen
+                repeat
+                  computer.pullSignal(0.1)
+                  screen = component.list("screen")()
+                until screen and component.invoke(screen, "getAspectRatio") == 4
+                component.invoke(gpu, "bind", screen)
+                local w, h = component.invoke(gpu, "getFitResolution")
+                component.invoke(gpu, "setResolution", w, h)
+                local cw, ch = component.invoke(gpu, "getResolution")
+                result(cw .. "x" .. ch)
+                while true do computer.pullSignal() end
+                """, ModItems.GPU3.get());
+        waitForResult(helper, () -> be.core().machine(), expected, () -> be.core().stop());
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 20, batch = "computah_recipes")
+    public static void dataRecipesLoad(GameTestHelper helper) {
+        var recipes = helper.getLevel().getRecipeManager();
+        for (String id : List.of("bios_eeprom", "os_floppy", "floppy_red", "floppy_light_blue")) {
+            var r = recipes.byKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Computah.MOD_ID, id));
+            helper.assertTrue(r.isPresent() && r.get().value() instanceof dev.computah.item.DataShapelessRecipe, "recipe " + id + " loaded");
+        }
+        var bios = recipes.byKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Computah.MOD_ID, "bios_eeprom")).orElseThrow();
+        var input = net.minecraft.world.item.crafting.CraftingInput.of(2, 1,
+                List.of(new ItemStack(ModItems.EEPROM.get()), new ItemStack(net.minecraft.world.item.Items.BOOK)));
+        helper.assertTrue(bios.value() instanceof dev.computah.item.DataShapelessRecipe d && d.matches(input, helper.getLevel())
+                && d.assemble(input, helper.getLevel().registryAccess()).has(ModComponents.EEPROM.get()), "EEPROM + book makes the BIOS");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 200, batch = "computah_multiblock")

@@ -112,17 +112,38 @@ w(f'{A}/blockstates/cable.json', {'multipart': parts})
 w(f'{A}/models/item/cable.json', {'parent': 'item/generated', 'textures': {'layer0': f'{M}:block/cable'}})
 
 items = {'cpu1': 'cpu1', 'cpu2': 'cpu2', 'cpu3': 'cpu3', 'ram1': 'ram1', 'ram2': 'ram3', 'ram3': 'ram5', 'ram4': 'ram6',
-         'hdd1': 'hdd1', 'hdd2': 'hdd2', 'hdd3': 'hdd3', 'floppy': 'floppy', 'os_floppy': 'os_floppy', 'eeprom': 'eeprom',
+         'hdd1': 'hdd1', 'hdd2': 'hdd2', 'hdd3': 'hdd3', 'eeprom': 'eeprom',
          'gpu1': 'graphicscard1', 'gpu2': 'graphicscard2', 'gpu3': 'graphicscard3', 'network_card': 'lancard',
          'wireless_card1': 'wlancard1', 'wireless_card2': 'wlancard2', 'redstone_card': 'redstonecard1', 'server': 'server3', 'linker': 'analyzer'}
 for name, t in items.items():
     w(f'{A}/models/item/{name}.json', {'parent': 'item/generated', 'textures': {'layer0': f'{M}:item/{t}'}})
+
+# Floppies: one item; the OS disk and dyed disks are data, shown through the computah:variant property
+# (0 = blank, 0.5 = OS, 1 = dyed). Dyed disks add a mask of the disk body, tinted with the vanilla dye colour.
+fl = Image.open(os.path.join(A, 'textures/item/floppy.png')).convert('RGBA')
+mask = Image.new('RGBA', fl.size, (0, 0, 0, 0))
+body = [fl.getpixel((x, y)) for y in range(fl.size[1]) for x in range(fl.size[0])]
+body = [p for p in body if p[3] and p[0] < 0xd0]
+top = max(p[0] for p in body)
+for y in range(fl.size[1]):
+    for x in range(fl.size[0]):
+        r, g, b, a = fl.getpixel((x, y))
+        if a and r < 0xd0:
+            v = min(255, round(r * 255 / top))
+            mask.putpixel((x, y), (v, v, v, 255))
+mask.save(os.path.join(A, 'textures/item/floppy_tint.png'))
+w(f'{A}/models/item/floppy.json', {'parent': 'item/generated', 'textures': {'layer0': f'{M}:item/floppy'}, 'overrides': [
+    {'predicate': {f'{M}:variant': 0.5}, 'model': f'{M}:item/floppy_os'},
+    {'predicate': {f'{M}:variant': 1.0}, 'model': f'{M}:item/floppy_dyed'}]})
+w(f'{A}/models/item/floppy_os.json', {'parent': 'item/generated', 'textures': {'layer0': f'{M}:item/os_floppy'}})
+w(f'{A}/models/item/floppy_dyed.json', {'parent': 'item/generated', 'textures': {'layer0': f'{M}:item/floppy', 'layer1': f'{M}:item/floppy_tint'}})
 
 # Sounds.
 w(f'{A}/sounds.json', {
     'hdd_access': {'sounds': [f'{M}:hdd_access{i}' for i in range(1, 8)], 'subtitle': 'subtitles.computah.hdd_access'},
     'floppy_access': {'sounds': [f'{M}:floppy_access{i}' for i in range(1, 7)], 'subtitle': 'subtitles.computah.floppy_access'},
     'floppy_insert': {'sounds': [f'{M}:floppy_insert'], 'subtitle': 'subtitles.computah.floppy_insert'},
+    'beep': {'sounds': [{'name': f'{M}:floppy_access1', 'stream': True}], 'subtitle': 'subtitles.computah.beep'},
     'floppy_eject': {'sounds': [f'{M}:floppy_eject'], 'subtitle': 'subtitles.computah.floppy_eject'},
     'computer_running': {'sounds': [f'{M}:computer_running']},
 })
@@ -167,7 +188,16 @@ shaped('hdd1', ['III', 'RSR', 'III'], {'I': 'minecraft:iron_nugget', 'R': 'minec
 shaped('hdd2', ['III', 'RSR', 'IGI'], {'I': 'minecraft:iron_nugget', 'R': 'minecraft:redstone', 'S': 'minecraft:smooth_stone', 'G': 'minecraft:gold_ingot'})
 shaped('hdd3', ['III', 'RSR', 'IDI'], {'I': 'minecraft:iron_nugget', 'R': 'minecraft:redstone', 'S': 'minecraft:smooth_stone', 'D': 'minecraft:diamond'})
 shapeless('floppy', ['minecraft:paper', 'minecraft:redstone'])
-shapeless('os_floppy', [f'{M}:floppy', 'minecraft:book'])
+def data_recipe(file, kind, ingredients, result):
+    w(f'{D}/{M}/recipe/{file}.json', {'type': f'{M}:{kind}', 'category': 'redstone',
+        'ingredients': [({'tag': v[1:]} if v.startswith('#') else {'item': v}) for v in ingredients], 'result': result})
+data_recipe('os_floppy', 'os_floppy', [f'{M}:floppy', 'minecraft:book'], {'id': f'{M}:floppy', 'count': 1})
+data_recipe('bios_eeprom', 'bios_eeprom', [f'{M}:eeprom', 'minecraft:book'], {'id': f'{M}:eeprom', 'count': 1})
+DYES = ['white', 'orange', 'magenta', 'light_blue', 'yellow', 'lime', 'pink', 'gray', 'light_gray', 'cyan', 'purple',
+        'blue', 'brown', 'green', 'red', 'black']
+for c in DYES:
+    data_recipe(f'floppy_{c}', 'floppy_dye', [f'{M}:floppy', f'#c:dyes/{c}'],
+                {'id': f'{M}:floppy', 'count': 1, 'components': {f'{M}:floppy_color': c}})
 shaped('eeprom', ['NRN', 'NPN'], {'N': 'minecraft:gold_nugget', 'R': 'minecraft:redstone', 'P': 'minecraft:paper'})
 shaped('gpu1', ['RIR', 'PPP'], {'R': 'minecraft:redstone', 'I': 'minecraft:iron_ingot', 'P': 'minecraft:paper'})
 shaped('gpu2', ['RGR', 'PPP'], {'R': 'minecraft:redstone', 'G': 'minecraft:gold_ingot', 'P': 'minecraft:paper'})

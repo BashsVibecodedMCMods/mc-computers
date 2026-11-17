@@ -28,6 +28,15 @@
     ],
     "subtitle": "subtitles.computah.floppy_insert"
   },
+  "beep": {
+    "sounds": [
+      {
+        "name": "computah:floppy_access1",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.computah.beep"
+  },
   "floppy_eject": {
     "sounds": [
       "computah:floppy_eject"

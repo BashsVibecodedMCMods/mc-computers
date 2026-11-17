@@ -78,7 +78,10 @@ public final class Machine extends Component {
     private double callBudget;
     private final Map<CallbackRegistry.Entry, Integer> limitedCalls = new HashMap<>();
 
-    private record PendingCall(Component component, CallbackRegistry.Entry entry, Arguments args) {
+    private record PendingCall(Component component, CallbackRegistry.Entry entry, Arguments args, long notBeforeTick) {
+        PendingCall(Component component, CallbackRegistry.Entry entry, Arguments args) {
+            this(component, entry, args, 0);
+        }
     }
 
     public Machine(MachineHost host, String address) {
@@ -360,6 +363,7 @@ public final class Machine extends Component {
             if (state != State.RUNNING || executing) return;
             if (waitingSync) {
                 PendingCall call = pendingCall;
+                if (call != null && ticks < call.notBeforeTick()) return;
                 pendingCall = null;
                 waitingSync = false;
                 resumeArgs = call == null ? ValueFactory.varargsOf(Constants.FALSE, LuaConverter.str("no pending call"))
@@ -816,6 +820,11 @@ public final class Machine extends Component {
                 pendingCall = new PendingCall(c, e, a);
             }
             return syncMarker;
+        } catch (dev.computah.api.DelayException ex) {
+            synchronized (this) {
+                pendingCall = new PendingCall(c, e, a, ticks + ex.ticks());
+            }
+            return syncMarker;
         }
     }
 
@@ -846,7 +855,7 @@ public final class Machine extends Component {
             out[0] = Constants.TRUE;
             for (int i = 0; i < result.length; i++) out[i + 1] = LuaConverter.toLua(result[i]);
             return ValueFactory.varargsOf(out);
-        } catch (LimitReachedException ex) {
+        } catch (LimitReachedException | dev.computah.api.DelayException ex) {
             if (!synchronous) throw ex;
             return ValueFactory.varargsOf(Constants.FALSE, LuaConverter.str("limit reached"));
         } catch (ComponentException ex) {

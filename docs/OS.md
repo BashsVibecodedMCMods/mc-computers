@@ -1,8 +1,10 @@
 # Computah OS
 
-Computah OS ships on the **Computah OS floppy** (craft a floppy with a book) and can be copied to a hard drive with
+Computah OS ships on the **Computah OS floppy** (craft a blank floppy with a book; it is the same item as a floppy,
+marked with data, and is also in the creative tab and JEI) and can be copied to a hard drive with
 `install`. It boots from the Lua BIOS: put the floppy in the case's floppy slot (tier 3) or in a disk drive on the
-computer's network.
+computer's network. Like every floppy it is slow (see [CONFIG.md](CONFIG.md#drives)): booting from it takes a few
+seconds and `install` about half a minute, with the drive sounds to match.
 
 Its files are `data/computah/lua/os/**` in the mod; a data pack can add or replace files under the same path.
 

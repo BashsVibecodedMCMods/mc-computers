@@ -2,5 +2,19 @@
   "parent": "item/generated",
   "textures": {
     "layer0": "computah:item/floppy"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "computah:variant": 0.5
+      },
+      "model": "computah:item/floppy_os"
+    },
+    {
+      "predicate": {
+        "computah:variant": 1.0
+      },
+      "model": "computah:item/floppy_dyed"
+    }
+  ]
 }

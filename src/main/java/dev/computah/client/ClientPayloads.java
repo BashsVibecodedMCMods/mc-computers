@@ -25,6 +25,10 @@ public final class ClientPayloads {
         });
     }
 
+    public static void beep(dev.computah.net.BeepPayload p) {
+        BuzzerSound.play(p.pos(), p.frequency(), p.seconds());
+    }
+
     public static void linkView(LinkViewPayload p) {
         net.minecraft.client.Minecraft.getInstance().execute(() -> LinkLineRenderer.set(p));
     }

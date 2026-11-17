@@ -19,6 +19,20 @@ public final class ScreenGeometry {
         return new double[]{MARGIN + (aw - w) / 2, MARGIN + (ah - h) / 2, w, h};
     }
 
+    /**
+     * The text resolution that fills a monitor of the given size in blocks without letterboxing: the most rows (and
+     * so the most detail) whose cells (8x16 pixels) match the shape of the display area, within the given maximum.
+     * Returns {cols, rows}. Like OpenComputers, screens still start at their maximum resolution; programs apply this
+     * with {@code gpu.setResolution(gpu.getFitResolution())}.
+     */
+    public static int[] fitResolution(int blocksWide, int blocksHigh, int maxCols, int maxRows) {
+        double aw = Math.max(1, blocksWide) - 2 * MARGIN, ah = Math.max(1, blocksHigh) - 2 * MARGIN;
+        double colsPerRow = 2 * aw / ah; // cols * WIDTH / (rows * HEIGHT) == aw / ah, with HEIGHT = 2 * WIDTH
+        int rows = (int) Math.max(1, Math.min(maxRows, Math.floor(maxCols / colsPerRow)));
+        int cols = (int) Math.max(1, Math.min(maxCols, Math.round(colsPerRow * rows)));
+        return new int[]{cols, rows};
+    }
+
     /** Converts a point on the face (blocks from the top-left) to 1-based fractional cell coordinates, or null. */
     public static double[] toCell(int blocksWide, int blocksHigh, DisplayBuffer b, double x, double y) {
         double[] r = displayRect(blocksWide, blocksHigh, b.cols() * Font.WIDTH, b.rows() * Font.HEIGHT);
