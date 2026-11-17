@@ -1,7 +1,8 @@
 EEPROM - the BIOS chip
 
-Every computer runs the code on its EEPROM when it starts. A crafted
-EEPROM holds the Lua BIOS, which boots /init.lua from a drive.
+Every computer runs the code on its EEPROM when it starts. EEPROMs are
+crafted blank; craft one with a book for the Lua BIOS, which boots
+/init.lua from a drive.
 
   Code area:  4096 bytes of Lua, run in the sandbox at boot.
   Data area:  256 bytes; by convention the boot drive's address.
@@ -14,6 +15,12 @@ The flash program:
   flash -c            size, checksum, read-only state
   flash -l "My BIOS"  set the label
   flash -d            show the data area (boot address)
+  flash --bios        write the stock Lua BIOS (/lib/bios.lua)
+  flash -w file       wait for an EEPROM to be swapped in, then write
+
+Programming a blank EEPROM: boot with the Lua BIOS, run
+`flash -w myfile.lua`, swap the blank EEPROM into the slot while the
+computer runs, and put the BIOS EEPROM back before rebooting.
 
 The eeprom component (component.eeprom):
   get() set(code) getData() setData(data) getLabel() setLabel(l)

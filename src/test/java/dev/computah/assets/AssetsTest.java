@@ -120,11 +120,28 @@ public class AssetsTest {
     }
 
     @Test
+    public void floppyVariantsAndDataRecipes() throws Exception {
+        // The OS floppy and dyed floppies are data on one item, drawn through model overrides.
+        JsonObject floppy = json("/assets/computah/models/item/floppy.json");
+        assertEquals(2, floppy.getAsJsonArray("overrides").size());
+        checkModel("computah:item/floppy_os", new java.util.HashSet<>());
+        checkModel("computah:item/floppy_dyed", new java.util.HashSet<>());
+        for (net.minecraft.world.item.DyeColor c : net.minecraft.world.item.DyeColor.values()) {
+            JsonObject r = json("/data/computah/recipe/floppy_" + c.getName() + ".json");
+            assertEquals("computah:floppy_dye", r.get("type").getAsString());
+            assertEquals(c.getName(), r.getAsJsonObject("result").getAsJsonObject("components").get("computah:floppy_color").getAsString());
+        }
+        assertEquals("computah:bios_eeprom", json("/data/computah/recipe/bios_eeprom.json").get("type").getAsString());
+        assertEquals("computah:os_floppy", json("/data/computah/recipe/os_floppy.json").get("type").getAsString());
+    }
+
+    @Test
     public void soundsExist() {
         JsonObject sounds = json("/assets/computah/sounds.json");
         for (Map.Entry<String, JsonElement> e : sounds.entrySet()) {
             for (JsonElement s : e.getValue().getAsJsonObject().getAsJsonArray("sounds")) {
-                assertTrue(exists(file(s.getAsString(), "sounds", ".ogg")), "sound " + s.getAsString());
+                String name = s.isJsonObject() ? s.getAsJsonObject().get("name").getAsString() : s.getAsString();
+                assertTrue(exists(file(name, "sounds", ".ogg")), "sound " + name);
             }
         }
     }

@@ -24,7 +24,7 @@
   "item.computah.hdd2": "Hard Disk Drive (Tier 2)",
   "item.computah.hdd3": "Hard Disk Drive (Tier 3)",
   "item.computah.floppy": "Floppy Disk",
-  "item.computah.os_floppy": "Computah OS Floppy",
+  "item.computah.floppy.os": "Computah OS (Floppy)",
   "item.computah.eeprom": "EEPROM",
   "item.computah.gpu1": "Graphics Card (Tier 1)",
   "item.computah.gpu2": "Graphics Card (Tier 2)",
@@ -47,6 +47,7 @@
   "tooltip.computah.network": "Messages over network cables",
   "tooltip.computah.redstone": "Reads and sets redstone on the computer's sides",
   "tooltip.computah.eeprom": "Code: %s / %s bytes",
+  "tooltip.computah.eeprom_empty": "Empty. Craft with a book for the Lua BIOS, or program it with 'flash'.",
   "tooltip.computah.readonly": "Read-only",
   "tooltip.computah.server": "%s parts installed. Right-click to configure; put it in a Server Rack to run it.",
   "tooltip.computah.linker.host": "Linking to %s (%s)",
@@ -69,5 +70,6 @@
   "subtitles.computah.hdd_access": "Hard drive whirs",
   "subtitles.computah.floppy_access": "Floppy drive clicks",
   "subtitles.computah.floppy_insert": "Floppy inserted",
-  "subtitles.computah.floppy_eject": "Floppy ejected"
+  "subtitles.computah.floppy_eject": "Floppy ejected",
+  "subtitles.computah.beep": "Computer beeps"
 }

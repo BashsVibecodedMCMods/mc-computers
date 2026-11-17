@@ -382,7 +382,7 @@ public class OsBootTest {
 
     @Test
     public void fitsInSmallestRam() throws Exception {
-        Rig rig = new Rig(PartItem.RAM_SIZES[1]);
+        Rig rig = new Rig(PartItem.ramSize(1));
         rig.run(() -> rig.screenText().contains("/#"), 3000);
         rig.type("free");
         rig.run(() -> rig.screenText().contains("Total"), 2000);

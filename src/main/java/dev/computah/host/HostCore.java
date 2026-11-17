@@ -4,6 +4,7 @@ import dev.computah.Config;
 import dev.computah.api.Component;
 import dev.computah.component.*;
 import dev.computah.fs.DirectoryFileSystem;
+import dev.computah.fs.DriveTiming;
 import dev.computah.fs.OsFiles;
 import dev.computah.item.PartItem;
 import dev.computah.item.PartKind;
@@ -22,7 +23,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
@@ -159,8 +159,9 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
             }
         }
         if (beep != null && beep[0] > 0) {
-            float pitch = (float) Math.max(0.5, Math.min(2.0, beep[0] / 440.0));
-            level.playSound(null, owner.pos(), SoundEvents.NOTE_BLOCK_HARP.value(), SoundSource.BLOCKS, 1.0f, pitch);
+            BlockPos p = owner.pos();
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear((net.minecraft.server.level.ServerLevel) level, null, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 32,
+                    new dev.computah.net.BeepPayload(p, (float) beep[0], (float) beep[1]));
         }
         if (hddActivity.getAndSet(false) && ticks - lastHddSound > 12) {
             lastHddSound = ticks;
@@ -273,15 +274,16 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
                 });
             }
             case HDD, FLOPPY -> {
-                long size = part.kind() == PartKind.HDD ? PartItem.HDD_SIZES[part.tier()] : PartItem.FLOPPY_SIZE;
-                FilesystemComponent fs = new FilesystemComponent(new DirectoryFileSystem(fsRoot(level).resolve(address), size), address, label(slot, address));
                 boolean floppy = part.kind() == PartKind.FLOPPY;
+                FilesystemComponent fs;
+                if (floppy && PartItem.isOsFloppy(stack)) {
+                    fs = new FilesystemComponent(OsFiles.fileSystem(), address, FilesystemComponent.fixedLabel("Computah OS"));
+                } else {
+                    long size = floppy ? PartItem.floppySize() : PartItem.hddSize(part.tier());
+                    fs = new FilesystemComponent(new DirectoryFileSystem(fsRoot(level).resolve(address), size), address, label(slot, address));
+                }
+                fs.setTiming(floppy ? DriveTiming.floppy() : DriveTiming.hdd(part.tier()));
                 fs.setActivityListener(write -> (floppy ? floppyActivity : hddActivity).set(true));
-                yield fs;
-            }
-            case OS_FLOPPY -> {
-                FilesystemComponent fs = new FilesystemComponent(OsFiles.fileSystem(), address, FilesystemComponent.fixedLabel("Computah OS"));
-                fs.setActivityListener(write -> floppyActivity.set(true));
                 yield fs;
             }
             case GPU -> new GpuComponent(address, part.tier());
@@ -444,11 +446,11 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             if (inventory.getItem(i).getItem() instanceof PartItem p) {
                 if (p.kind() == PartKind.CPU && cpu == 0) cpu = p.tier();
-                if (p.kind() == PartKind.RAM) memory += PartItem.RAM_SIZES[p.tier()];
+                if (p.kind() == PartKind.RAM) memory += PartItem.ramSize(p.tier());
             }
         }
         if (cpu == 0 || memory == 0) return null;
-        return new MachineSpec(memory, PartItem.CPU_COMPONENTS[cpu], PartItem.CPU_BUDGET[cpu], Config.get(Config.TIMEOUT), 64 * 1024);
+        return new MachineSpec(memory, PartItem.CPU_COMPONENTS[cpu], PartItem.CPU_BUDGET[cpu], Config.get(Config.TIMEOUT), PartItem.tmpSize());
     }
 
     @Override

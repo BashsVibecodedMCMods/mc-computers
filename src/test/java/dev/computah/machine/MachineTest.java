@@ -53,6 +53,22 @@ public class MachineTest {
     }
 
     @Test
+    public void delayedCallsWaitWithoutBlockingCoroutines() throws Exception {
+        var host = new TestMachines.Host();
+        var sink = new TestMachines.Sink();
+        Machine m = boot(host, sink, """
+                local t = computer.uptime()
+                local r = sink.slow()
+                sink.put(r, computer.uptime() - t >= 0.5 - 1e-9)
+                sink.finish()
+                computer.pullSignal()
+                """);
+        TestMachines.run(m, () -> sink.done, 400);
+        assertEquals(List.of("done", true), sink.values, "crash: " + m.crashMessage());
+        m.stop();
+    }
+
+    @Test
     public void indirectAndLimitedCalls() throws Exception {
         var host = new TestMachines.Host();
         var sink = new TestMachines.Sink();

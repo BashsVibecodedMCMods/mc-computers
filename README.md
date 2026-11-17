@@ -18,13 +18,17 @@ other mod needed.
 - **Computers keep running.** A running computer is saved with its whole Lua state and picks up exactly where it
   was after chunk unloads and server restarts.
 - **Optional power.** Off by default; turn it on to use Forge Energy.
-- Cheap, vanilla-material recipes in the spirit of ComputerCraft.
+- Cheap, vanilla-material recipes in the spirit of ComputerCraft. Floppies can be dyed in the 16 vanilla colours.
+- Drives take time like real hardware (configurable): floppies spin up, hard drives chug while you install.
+- A PC-speaker buzzer that plays any frequency (`computer.beep`).
+- Memory, drive and tmpfs sizes and drive speeds are server settings ([docs/CONFIG.md](docs/CONFIG.md)).
 
 ## Getting started
 
-1. Craft a **Computer Case**, a **CPU**, **Memory**, an **EEPROM** (comes with the Lua BIOS), a **Graphics Card**,
-   a **Screen**, a **Keyboard** and a **Computah OS Floppy** (floppy + book). A tier 3 case has a floppy slot; for
-   tier 1-2 cases add a **Disk Drive**.
+1. Craft a **Computer Case**, a **CPU**, **Memory**, an **EEPROM**, a **Graphics Card**, a **Screen**, a **Keyboard**
+   and a **Floppy Disk**. EEPROMs and floppies are crafted blank: craft the EEPROM with a **book** to get the
+   **Lua BIOS**, and the floppy with a **book** to get the **Computah OS floppy** (both are also in the creative tab
+   and JEI). A tier 3 case has a floppy slot; for tier 1-2 cases add a **Disk Drive**.
 2. Put the parts in the case, place the screen next to it (or connect it with cables) and the keyboard on the screen.
 3. Press the power button in the case GUI (or sneak-right-click the case). Right-click the screen to type.
 4. Type `help`. To keep files, add a hard drive and run `install`, then remove the floppy.
@@ -38,6 +42,7 @@ other mod needed.
 - [docs/GRAPHICS.md](docs/GRAPHICS.md) – text and pixel graphics, buffers, monitors
 - [docs/NETWORKING.md](docs/NETWORKING.md) – cables, messages, wireless links, adapters
 - [docs/COMPONENTS.md](docs/COMPONENTS.md) – every component method and signal
+- [docs/CONFIG.md](docs/CONFIG.md) – every server setting (sizes, drive speeds, power, network)
 - [docs/POWER.md](docs/POWER.md) – optional energy use
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) – how the mod is built
 

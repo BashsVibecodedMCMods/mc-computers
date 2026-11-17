@@ -45,6 +45,7 @@ public final class Computah {
         ModMenus.REGISTER.register(modBus);
         ModSounds.REGISTER.register(modBus);
         ModTabs.REGISTER.register(modBus);
+        ModRecipes.REGISTER.register(modBus);
         container.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
 
         modBus.addListener(this::registerCapabilities);
@@ -68,6 +69,7 @@ public final class Computah {
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar r = event.registrar("1");
         r.playToClient(DisplayPayload.TYPE, DisplayPayload.CODEC, (p, ctx) -> dev.computah.client.ClientPayloads.display(p));
+        r.playToClient(dev.computah.net.BeepPayload.TYPE, dev.computah.net.BeepPayload.CODEC, (p, ctx) -> dev.computah.client.ClientPayloads.beep(p));
         r.playToClient(LinkViewPayload.TYPE, LinkViewPayload.CODEC, (p, ctx) -> dev.computah.client.ClientPayloads.linkView(p));
         r.playToServer(ScreenInputPayload.TYPE, ScreenInputPayload.CODEC, ServerHandlers::screenInput);
     }

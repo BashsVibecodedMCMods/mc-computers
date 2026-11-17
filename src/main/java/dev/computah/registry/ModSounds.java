@@ -20,6 +20,8 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> FLOPPY_INSERT = sound("floppy_insert");
     public static final DeferredHolder<SoundEvent, SoundEvent> FLOPPY_EJECT = sound("floppy_eject");
     public static final DeferredHolder<SoundEvent, SoundEvent> COMPUTER_RUNNING = sound("computer_running");
+    /** The buzzer: its audio is generated on the client (client/BuzzerSound); the sound file is only a placeholder. */
+    public static final DeferredHolder<SoundEvent, SoundEvent> BEEP = sound("beep");
 
     private ModSounds() {
     }

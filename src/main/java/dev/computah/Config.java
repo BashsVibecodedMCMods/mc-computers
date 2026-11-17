@@ -17,6 +17,19 @@ public final class Config {
     public static final ModConfigSpec.IntValue LINK_RANGE;
     public static final ModConfigSpec.IntValue MAX_LINKS;
     public static final ModConfigSpec.IntValue MAX_HOST_UPDATES_PER_TICK;
+    public static final ModConfigSpec.BooleanValue DRIVE_SIMULATE;
+    public static final ModConfigSpec.DoubleValue DRIVE_SPEED;
+    public static final ModConfigSpec.DoubleValue FLOPPY_READ;
+    public static final ModConfigSpec.DoubleValue FLOPPY_WRITE;
+    public static final ModConfigSpec.IntValue FLOPPY_SEEK;
+    public static final ModConfigSpec.IntValue FLOPPY_SPIN_UP;
+    public static final ModConfigSpec.DoubleValue HDD_READ;
+    public static final ModConfigSpec.DoubleValue HDD_WRITE;
+    public static final ModConfigSpec.IntValue HDD_SEEK;
+    public static final ModConfigSpec.ConfigValue<java.util.List<? extends Integer>> RAM_KIB;
+    public static final ModConfigSpec.ConfigValue<java.util.List<? extends Integer>> HDD_KIB;
+    public static final ModConfigSpec.IntValue FLOPPY_KIB;
+    public static final ModConfigSpec.IntValue TMPFS_KIB;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -44,6 +57,34 @@ public final class Config {
         LINK_RANGE = b.comment("Range in blocks for wireless peripheral links through a tier 1 wireless card (tier 2 is unlimited). 0 = unlimited.")
                 .defineInRange("linkRange", 64, 0, 100000);
         MAX_LINKS = b.comment("Maximum number of linked blocks per computer or rack.").defineInRange("maxLinks", 32, 1, 1024);
+        b.pop();
+
+        b.push("drives");
+        DRIVE_SIMULATE = b.comment("Whether hard drives and floppies take time to read and write (like OpenComputers). Off = instant.")
+                .define("simulateSpeed", true);
+        DRIVE_SPEED = b.comment("Multiplies every drive speed below (2 = twice as fast).")
+                .defineInRange("speedMultiplier", 1.0, 0.01, 1000.0);
+        FLOPPY_READ = b.comment("Floppy read speed in KiB per second.").defineInRange("floppyReadKiBps", 24.0, 0.1, 1_000_000.0);
+        FLOPPY_WRITE = b.comment("Floppy write speed in KiB per second.").defineInRange("floppyWriteKiBps", 12.0, 0.1, 1_000_000.0);
+        FLOPPY_SEEK = b.comment("Milliseconds every floppy operation (open, list, read, ...) takes before transferring data.")
+                .defineInRange("floppySeekMillis", 25, 0, 10_000);
+        FLOPPY_SPIN_UP = b.comment("Milliseconds a floppy takes to spin up after 3 seconds without use.")
+                .defineInRange("floppySpinUpMillis", 750, 0, 10_000);
+        HDD_READ = b.comment("Tier 1 hard drive read speed in KiB per second (tier 2: twice that, tier 3: four times).")
+                .defineInRange("hddReadKiBps", 64.0, 0.1, 1_000_000.0);
+        HDD_WRITE = b.comment("Tier 1 hard drive write speed in KiB per second (tier 2: twice that, tier 3: four times).")
+                .defineInRange("hddWriteKiBps", 48.0, 0.1, 1_000_000.0);
+        HDD_SEEK = b.comment("Milliseconds every hard drive operation takes before transferring data.")
+                .defineInRange("hddSeekMillis", 5, 0, 10_000);
+        b.pop();
+
+        b.push("parts");
+        RAM_KIB = b.comment("Memory of the four RAM tiers in KiB.")
+                .defineList("ramKiB", java.util.List.of(512, 1024, 2048, 4096), () -> 1024, o -> o instanceof Integer i && i >= 64 && i <= 1 << 20);
+        HDD_KIB = b.comment("Capacity of the three hard drive tiers in KiB.")
+                .defineList("hddKiB", java.util.List.of(1024, 2048, 4096), () -> 1024, o -> o instanceof Integer i && i >= 16 && i <= 1 << 22);
+        FLOPPY_KIB = b.comment("Floppy capacity in KiB.").defineInRange("floppyKiB", 512, 16, 1 << 22);
+        TMPFS_KIB = b.comment("Size of every computer's temporary filesystem in KiB.").defineInRange("tmpfsKiB", 64, 4, 1 << 20);
         b.pop();
         SPEC = b.build();
     }

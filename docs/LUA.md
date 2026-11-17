@@ -146,7 +146,7 @@ This computer's address. The computer is also a component of type `computer` wit
 
 ### computer.tmpAddress() -> string
 
-The address of the computer's temporary filesystem (64 KiB, empty at every boot; its contents survive being saved
+The address of the computer's temporary filesystem (64 KiB by default, empty at every boot; its contents survive being saved
 and loaded).
 
 ### computer.freeMemory() -> number
@@ -175,7 +175,9 @@ Stores an address (or nothing) in the EEPROM's data area. Takes a tick.
 
 ### computer.beep([frequency[, duration]])
 
-Plays a tone: `frequency` 20–2000 Hz (default 440), `duration` up to 5 seconds (default 0.1). Non-blocking.
+Plays a tone on the computer's buzzer, a square wave like a PC speaker: any `frequency` from 20 to 2000 Hz (default
+440, not rounded to musical notes), `duration` up to 5 seconds (default 0.1). Non-blocking. Players within 32 blocks
+hear it, fading with distance, at the Blocks volume.
 
 ### computer.beep(pattern)
 
@@ -307,7 +309,8 @@ reaches the machine: the coroutine's `resume` simply sees it as waiting.
 | Limit | Value |
 |---|---|
 | Time without yielding | 5 s (config `machines.timeout`), then the error "too long without yielding"; 2 s later a hard stop. |
-| Memory | Sum of installed RAM: 512 KiB, 1 MiB, 2 MiB or 4 MiB per module. Measured approximately. |
+| Memory | Sum of installed RAM: by default 512 KiB, 1 MiB, 2 MiB or 4 MiB per module ([configurable](CONFIG.md#parts)). Measured approximately. |
+| Drive speed | Filesystem calls on floppies and hard drives take time ([configurable](CONFIG.md#drives)); other threads keep running meanwhile. |
 | Signal queue | 256 signals. |
 | Components | CPU tier 1: 8, tier 2: 12, tier 3: 16 (besides the computer itself and its tmpfs). |
 | Rate-limited calls | Per-tick budgets (CPU and GPU tiers); calls over budget wait a tick. |

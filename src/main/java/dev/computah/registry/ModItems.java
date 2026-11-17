@@ -58,9 +58,7 @@ public final class ModItems {
     public static final DeferredItem<PartItem> HDD2 = part("hdd2", PartKind.HDD, 2);
     public static final DeferredItem<PartItem> HDD3 = part("hdd3", PartKind.HDD, 3);
     public static final DeferredItem<PartItem> FLOPPY = part("floppy", PartKind.FLOPPY, 1);
-    public static final DeferredItem<PartItem> OS_FLOPPY = part("os_floppy", PartKind.OS_FLOPPY, 1);
-    public static final DeferredItem<PartItem> EEPROM = add(REGISTER.register("eeprom", () -> new PartItem(new Item.Properties().stacksTo(1)
-            .component(ModComponents.EEPROM.get(), ModComponents.EepromData.ofCode(PartItem.biosCode(), "Lua BIOS")), PartKind.EEPROM, 1)));
+    public static final DeferredItem<PartItem> EEPROM = part("eeprom", PartKind.EEPROM, 1);
     public static final DeferredItem<PartItem> GPU1 = part("gpu1", PartKind.GPU, 1);
     public static final DeferredItem<PartItem> GPU2 = part("gpu2", PartKind.GPU, 2);
     public static final DeferredItem<PartItem> GPU3 = part("gpu3", PartKind.GPU, 3);

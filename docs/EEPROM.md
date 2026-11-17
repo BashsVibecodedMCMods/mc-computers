@@ -24,7 +24,9 @@ exactly what happens at boot, what the code can use, and how to write, flash, te
 | Label | 24 characters | The item name shown in tooltips. |
 | Read-only flag | – | Once set, code and label can never change again (the data area stays writable). |
 
-A crafted EEPROM comes with the **Lua BIOS** already on it (label "Lua BIOS"). Each EEPROM item keeps its own
+A crafted EEPROM is **blank**, like a new hard drive. Craft it with a **book** (shapeless) to put the **Lua BIOS**
+on it (label "Lua BIOS"); the creative tab and JEI also have a ready Lua BIOS EEPROM (the same item, with data).
+See [Blank EEPROMs and programming them](#blank-eeproms-and-programming-them). Each EEPROM item keeps its own
 contents, so you can carry EEPROMs between computers, keep spares, or hand out "cartridges" with special
 firmware. The contents live in the item (a data component), not in the world, and survive breaking the computer.
 
@@ -88,7 +90,8 @@ on the server thread at the next tick, and the computer continues with the resul
 
 ## The default Lua BIOS, line by line
 
-This is `data/computah/lua/bios.lua`, what every crafted EEPROM contains (about 1.9 KB):
+This is `data/computah/lua/bios.lua`, what the EEPROM + book recipe writes (about 1.9 KB). The OS floppy has a copy
+as `/lib/bios.lua`:
 
 ```lua
 local component, computer = component, computer
@@ -334,13 +337,31 @@ e.makeReadonly(e.getChecksum())
 or `flash --lock`. A read-only EEPROM still has a writable data area, so the Lua BIOS can still remember its boot
 drive. Use this to hand out tamper-proof firmware.
 
+## Blank EEPROMs and programming them
+
+A blank EEPROM can't boot a computer (`the EEPROM is empty`). There are three ways to fill one:
+
+1. **Crafting:** blank EEPROM + book = Lua BIOS EEPROM. (This also resets an EEPROM to the Lua BIOS, unless it is
+   read-only.)
+2. **Hot swap:** EEPROMs can be swapped while a computer runs (only CPU and memory changes stop it). Boot Computah OS
+   with a Lua BIOS EEPROM, then:
+   ```
+   flash -w mybios.lua    -- waits for you to swap in the blank EEPROM, then writes the file to it
+   flash -w --bios        -- the same with the stock Lua BIOS (/lib/bios.lua)
+   ```
+   `flash -w` waits for the `component_added` signal of the new EEPROM and makes it the primary one. Without `-w`,
+   swap first and then run `flash mybios.lua`. Put the Lua BIOS EEPROM back before you reboot.
+3. **From your own code:** `component.eeprom.set(code)` on whatever EEPROM is installed (see the reference).
+
+Label the result with `flash -l "My firmware"`; the label is the item's tooltip name.
+
 ## Debugging and recovery
 
 - **The error is on the screen** (if there is one) and in the case GUI: hover over "Crashed".
 - **Test before flashing.** Run your BIOS file as a normal program first: `lua mybios.lua`. Inside the OS the same
   `component` and `computer` functions exist, so most BIOS code behaves the same.
 - **Bricked EEPROM** (it boots into a loop, crashes, or never yields): take it out of the computer. Any EEPROM can
-  be rewritten from another computer with `flash`. A fresh crafted EEPROM always has the Lua BIOS.
+  be rewritten from another computer with `flash`, or crafted with a book to get the Lua BIOS back.
 - **Lost boot drive:** if the saved boot address is no longer installed, the Lua BIOS simply tries the other drives.
   `flash -d -` clears the data area.
 - **Read-only and broken:** craft a new EEPROM; read-only chips can't be changed.

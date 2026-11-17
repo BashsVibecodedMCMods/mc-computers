@@ -106,6 +106,14 @@ public class ScreenComponent extends Component {
         return new Object[]{was, false};
     }
 
+    public int blocksWide() {
+        return blocksWide;
+    }
+
+    public int blocksHigh() {
+        return blocksHigh;
+    }
+
     @Callback(doc = "function():number, number -- The size of the monitor in blocks (width, height).")
     public Object[] getAspectRatio(Context ctx, Arguments args) {
         return new Object[]{blocksWide, blocksHigh};

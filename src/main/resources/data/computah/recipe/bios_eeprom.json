@@ -1,0 +1,16 @@
+{
+  "type": "computah:bios_eeprom",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "computah:eeprom"
+    },
+    {
+      "item": "minecraft:book"
+    }
+  ],
+  "result": {
+    "id": "computah:eeprom",
+    "count": 1
+  }
+}
