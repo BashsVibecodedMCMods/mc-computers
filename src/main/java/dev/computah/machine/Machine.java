@@ -6,6 +6,7 @@ import dev.computah.api.Callback;
 import dev.computah.api.Component;
 import dev.computah.api.ComponentException;
 import dev.computah.api.Context;
+import dev.computah.api.LimitReachedException;
 import dev.computah.component.CallbackRegistry;
 import dev.computah.component.FilesystemComponent;
 import dev.computah.fs.RamFileSystem;
@@ -346,7 +347,7 @@ public final class Machine extends Component {
                 pendingCall = null;
                 waitingSync = false;
                 resumeArgs = call == null ? ValueFactory.varargsOf(Constants.FALSE, LuaConverter.str("no pending call"))
-                        : callNow(call.component(), call.entry(), call.args());
+                        : callNow(call.component(), call.entry(), call.args(), true);
                 submit();
                 return;
             }
@@ -582,7 +583,14 @@ public final class Machine extends Component {
             }
             return syncMarker;
         }
-        return callNow(c, e, a);
+        try {
+            return callNow(c, e, a, false);
+        } catch (LimitReachedException ex) {
+            synchronized (this) {
+                pendingCall = new PendingCall(c, e, a);
+            }
+            return syncMarker;
+        }
     }
 
     private static Varargs copy(Varargs v) {
@@ -601,17 +609,20 @@ public final class Machine extends Component {
         return true;
     }
 
-    private Varargs callNow(Component c, CallbackRegistry.Entry e, Arguments a) {
+    private Varargs callNow(Component c, CallbackRegistry.Entry e, Arguments a, boolean synchronous) {
         try {
             if (!components.containsKey(c.address())) {
                 return ValueFactory.varargsOf(Constants.FALSE, LuaConverter.str("no such component"));
             }
-            Object[] result = e.invoke(c, new Context(this), a);
+            Object[] result = e.invoke(c, new Context(this, synchronous), a);
             if (result == null || result.length == 0) return Constants.TRUE;
             LuaValue[] out = new LuaValue[result.length + 1];
             out[0] = Constants.TRUE;
             for (int i = 0; i < result.length; i++) out[i + 1] = LuaConverter.toLua(result[i]);
             return ValueFactory.varargsOf(out);
+        } catch (LimitReachedException ex) {
+            if (!synchronous) throw ex;
+            return ValueFactory.varargsOf(Constants.FALSE, LuaConverter.str("limit reached"));
         } catch (ComponentException ex) {
             return ValueFactory.varargsOf(Constants.FALSE, LuaConverter.str(ex.getMessage()));
         } catch (IllegalArgumentException | IllegalStateException | IndexOutOfBoundsException ex) {
