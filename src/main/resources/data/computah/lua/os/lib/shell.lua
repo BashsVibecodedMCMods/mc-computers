@@ -6,8 +6,37 @@ local event = require("event")
 local text = require("text")
 local kernel = package.kernel
 
-local shell = {aliases = {ll = "ls -l", la = "ls -a", dir = "ls", cls = "clear", ["?"] = "help"}}
+local shell = {}
+local aliasTable = {ll = "ls -l", la = "ls -a", dir = "ls", cls = "clear", ["?"] = "help"}
 shell.builtins = {}
+
+--- The command an alias stands for, or nil.
+function shell.getAlias(name)
+  checkArg(1, name, "string")
+  return aliasTable[name]
+end
+
+--- Defines (or with nil removes) an alias: typing `name` runs `value` (extra words are passed on).
+function shell.setAlias(name, value)
+  checkArg(1, name, "string")
+  checkArg(2, value, "string", "nil")
+  aliasTable[name] = value
+end
+
+--- Iterates over aliases: for name, value in shell.aliases() do ... end
+function shell.aliases()
+  return next, aliasTable, nil
+end
+
+--- The program search path (the PATH variable).
+function shell.getPath()
+  return os.getenv("PATH")
+end
+
+function shell.setPath(value)
+  checkArg(1, value, "string")
+  os.setenv("PATH", value)
+end
 
 function shell.getWorkingDirectory()
   return process.data().cwd or "/"
@@ -228,7 +257,7 @@ end
 
 --- Starts a program as a new process. Returns the process (a thread) or nil, reason.
 function shell.spawn(name, args, streams, detached)
-  local alias = shell.aliases[name]
+  local alias = aliasTable[name]
   if alias then
     local parts = text.tokenize(alias)
     name = table.remove(parts, 1)
@@ -236,10 +265,10 @@ function shell.spawn(name, args, streams, detached)
   end
   local builtin = shell.builtins[name]
   local fn, reason
+  local path
   if builtin then
     fn = function(...) return builtin(...) end
   else
-    local path
     path, reason = shell.resolve(name, "lua")
     if not path then return nil, name .. ": " .. reason end
     fn, reason = shell.load(path)
@@ -249,6 +278,7 @@ function shell.spawn(name, args, streams, detached)
     local result = fn(...)
     return result
   end, name, {args = table.pack(table.unpack(args)), detached = detached})
+  t.data.path = path or name
   streams = streams or {}
   for k, v in pairs(streams) do t.data.io[k] = v end
   return t
@@ -405,16 +435,16 @@ end
 
 function shell.builtins.alias(name, value)
   if not name then
-    for k, v in pairs(shell.aliases) do io.write(k .. " = " .. v .. "\n") end
+    for k, v in shell.aliases() do io.write(k .. " = " .. v .. "\n") end
   elseif value then
-    shell.aliases[name] = value
+    shell.setAlias(name, value)
   else
-    io.write(name .. " = " .. tostring(shell.aliases[name]) .. "\n")
+    io.write(name .. " = " .. tostring(shell.getAlias(name)) .. "\n")
   end
 end
 
 function shell.builtins.unalias(name)
-  if name then shell.aliases[name] = nil end
+  if name then shell.setAlias(name, nil) end
 end
 
 function shell.builtins.pwd()

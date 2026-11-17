@@ -671,4 +671,15 @@ public class GpuComponent extends Component implements PersistentComponent {
             b.set(0, i, new String(bytes, StandardCharsets.UTF_8).codePoints().toArray(), false, i == 0 ? 0xFF5555 : 0xFFFFFF, 0x000000, 0);
         }
     }
+
+    @Override
+    public Map<String, String> deviceInfo() {
+        Map<String, String> m = super.deviceInfo();
+        m.put("description", "Graphics card");
+        m.put("product", "Computah GPU tier " + tier.tier());
+        m.put("width", String.valueOf(tier.cols()) + "x" + tier.rows());
+        m.put("capacity", String.valueOf(tier.pixelWidth()) + "x" + tier.pixelHeight());
+        m.put("size", String.valueOf(tier.depth()));
+        return m;
+    }
 }

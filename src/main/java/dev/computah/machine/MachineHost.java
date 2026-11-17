@@ -37,6 +37,11 @@ public interface MachineHost {
     default void beep(double frequency, double duration) {
     }
 
+    /** Plays a pattern of short (".") and long ("-") beeps one after another. Called from machine threads. */
+    default void beepPattern(String pattern) {
+        if (!pattern.isEmpty()) beep(1000, pattern.charAt(0) == '-' ? 0.4 : 0.1);
+    }
+
     /** A short description for logs. */
     default String describe() {
         return "machine";

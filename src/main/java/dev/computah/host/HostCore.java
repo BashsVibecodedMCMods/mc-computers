@@ -80,6 +80,8 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
     private long seenEpoch = -1, seenLinkEpoch = -1;
     private final AtomicBoolean hddActivity = new AtomicBoolean(), floppyActivity = new AtomicBoolean();
     private final AtomicReference<double[]> pendingBeep = new AtomicReference<>();
+    private final java.util.concurrent.ConcurrentLinkedQueue<double[]> beepQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private long nextBeepTick;
     private long lastHddSound, lastFloppySound, ticks;
     private String hardwareSignature = "";
     // Saving running computers (see save/load and docs/ARCHITECTURE.md).
@@ -149,7 +151,14 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
         // Keep the chunk marked as changed while running, so autosaves keep the saved state fresh.
         if (m.isOn() && ticks % 100 == 0) owner.markDirty();
         double[] beep = pendingBeep.getAndSet(null);
-        if (beep != null) {
+        if (beep == null && ticks >= nextBeepTick) {
+            double[] queued = beepQueue.poll();
+            if (queued != null) {
+                beep = queued;
+                nextBeepTick = ticks + Math.round(queued[1] * 20) + 2;
+            }
+        }
+        if (beep != null && beep[0] > 0) {
             float pitch = (float) Math.max(0.5, Math.min(2.0, beep[0] / 440.0));
             level.playSound(null, owner.pos(), SoundEvents.NOTE_BLOCK_HARP.value(), SoundSource.BLOCKS, 1.0f, pitch);
         }
@@ -499,6 +508,16 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
     @Override
     public void beep(double frequency, double duration) {
         pendingBeep.set(new double[]{frequency, duration});
+    }
+
+    @Override
+    public void beepPattern(String pattern) {
+        if (beepQueue.size() > 64) return;
+        for (char c : pattern.toCharArray()) {
+            if (c == '.') beepQueue.add(new double[]{1000, 0.1});
+            else if (c == '-') beepQueue.add(new double[]{1000, 0.4});
+            else if (c == ' ') beepQueue.add(new double[]{0, 0.2});
+        }
     }
 
     @Override

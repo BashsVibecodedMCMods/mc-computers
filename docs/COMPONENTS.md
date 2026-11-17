@@ -9,7 +9,7 @@ Methods marked **(tick)** are indirect: they run on the server thread, and the c
 The computer itself (its own address).
 
 - `isRunning():boolean` — Whether the computer is running.
-- `beep([frequency:number[, duration:number]])` — Plays a tone.
+- `beep([frequency:number|pattern:string[, duration:number]])` — Plays a tone, or a pattern of short (.) and long (-) beeps.
 - `stop():boolean` **(tick)** — Stops the computer (when called on another computer).
 - `start():boolean` **(tick)** — Starts this computer.
 

@@ -3,6 +3,7 @@
 local component = component
 local filesystem = {}
 local mounts = {} -- {path = "/mnt/abc", proxy = <filesystem proxy>}, longest path first
+local links = {}  -- symbolic links: canonical link path -> target path (virtual, like OpenOS: gone after a reboot)
 
 local function segments(path)
   local parts = {}
@@ -98,9 +99,62 @@ function filesystem.mounts()
   end
 end
 
+--- Follows symbolic links in a canonical path.
+local function resolveLinks(path)
+  for _ = 1, 16 do
+    local changed = false
+    for lp, target in pairs(links) do
+      if path == lp or path:sub(1, #lp + 1) == lp .. "/" then
+        path = filesystem.canonical(target .. path:sub(#lp + 1))
+        changed = true
+        break
+      end
+    end
+    if not changed then return path end
+  end
+  return path
+end
+
+--- The path with every symbolic link followed.
+function filesystem.realPath(path)
+  checkArg(1, path, "string")
+  return resolveLinks(filesystem.canonical(path))
+end
+
+--- Creates a symbolic link at linkpath pointing to target. Links are virtual (not stored on the drive).
+function filesystem.link(target, linkpath)
+  checkArg(1, target, "string")
+  checkArg(2, linkpath, "string")
+  linkpath = filesystem.canonical(linkpath)
+  if links[linkpath] or filesystem.exists(linkpath) then return nil, "file already exists" end
+  links[linkpath] = target:sub(1, 1) == "/" and filesystem.canonical(target) or filesystem.concat(filesystem.path(linkpath), target)
+  return true
+end
+
+--- Whether path is a symbolic link, and its target.
+function filesystem.isLink(path)
+  checkArg(1, path, "string")
+  local target = links[filesystem.canonical(path)]
+  return target ~= nil, target
+end
+
+--- The proxy of a mounted filesystem by address prefix or label, or nil.
+function filesystem.proxy(filter)
+  checkArg(1, filter, "string")
+  for _, m in ipairs(mounts) do
+    if m.proxy.address:sub(1, #filter) == filter or m.proxy.getLabel() == filter then return m.proxy end
+  end
+  local address = component.get(filter, "filesystem")
+  if address then return component.proxy(address) end
+  for a in component.list("filesystem", true) do
+    if component.invoke(a, "getLabel") == filter then return component.proxy(a) end
+  end
+  return nil, "no such filesystem"
+end
+
 --- The filesystem proxy holding a path, and the path relative to it.
 function filesystem.get(path)
-  path = filesystem.canonical(path)
+  path = resolveLinks(filesystem.canonical(path))
   for _, m in ipairs(mounts) do
     if path == m.path or m.path == "/" or path:sub(1, #m.path + 1) == m.path .. "/" then
       local rel = m.path == "/" and path:sub(2) or path:sub(#m.path + 2)
@@ -112,7 +166,7 @@ end
 
 local function mountPointsIn(path)
   local result = {}
-  path = filesystem.canonical(path)
+  path = resolveLinks(filesystem.canonical(path))
   local prefix = path == "/" and "/" or path .. "/"
   for _, m in ipairs(mounts) do
     if m.path ~= path and m.path:sub(1, #prefix) == prefix then
@@ -125,7 +179,7 @@ local function mountPointsIn(path)
 end
 
 local function isMountPoint(path)
-  path = filesystem.canonical(path)
+  path = resolveLinks(filesystem.canonical(path))
   for _, m in ipairs(mounts) do
     if m.path == path then return true end
   end
@@ -174,6 +228,13 @@ function filesystem.list(path)
   for name in pairs(mountPointsIn(path)) do
     if not seen[name] then result[#result + 1] = name .. "/" end
   end
+  local dir = filesystem.canonical(path)
+  for lp, target in pairs(links) do
+    local name = filesystem.name(lp)
+    if name and filesystem.path(lp) == (dir == "/" and "/" or dir .. "/") and not seen[name] then
+      result[#result + 1] = name .. (filesystem.isDirectory(target) and "/" or "")
+    end
+  end
   table.sort(result)
   local i = 0
   return function()
@@ -189,6 +250,11 @@ function filesystem.makeDirectory(path)
 end
 
 function filesystem.remove(path)
+  local canonical = filesystem.canonical(path)
+  if links[canonical] then
+    links[canonical] = nil
+    return true
+  end
   local fs, rel = filesystem.get(path)
   if not fs then return nil, rel end
   return fs.remove(rel)
@@ -258,6 +324,24 @@ function filesystem.writeAll(path, data)
   return ok, err
 end
 
+local function fsConfig()
+  local data = filesystem.readAll("/etc/filesystem.cfg")
+  local cfg = data and require("serialization").unserialize(data)
+  return type(cfg) == "table" and cfg or {}
+end
+
+--- Whether /autorun.lua on newly inserted drives runs automatically (off by default).
+function filesystem.isAutorunEnabled()
+  return fsConfig().autorun == true
+end
+
+function filesystem.setAutorunEnabled(enabled)
+  checkArg(1, enabled, "boolean")
+  local cfg = fsConfig()
+  cfg.autorun = enabled
+  return filesystem.writeAll("/etc/filesystem.cfg", require("serialization").serialize(cfg, true) .. "\n")
+end
+
 --- Mounts every other filesystem at /mnt/<first 3 address characters>, and keeps doing so as drives come and go.
 function filesystem.mountAll()
   local function mountOne(address)
@@ -269,7 +353,17 @@ function filesystem.mountAll()
   for address in component.list("filesystem", true) do mountOne(address) end
   local event = require("event")
   event.listen("component_added", function(_, address, ctype)
-    if ctype == "filesystem" then mountOne(address) end
+    if ctype ~= "filesystem" then return end
+    mountOne(address)
+    local path = "/mnt/" .. address:sub(1, 3) .. "/autorun.lua"
+    if filesystem.isAutorunEnabled() and filesystem.exists(path) then
+      -- Run it as its own process; listeners must not block.
+      require("process").spawn(function()
+        local fn, reason = package.kernel.loadfile(path, setmetatable({}, {__index = _G}))
+        if not fn then error(reason, 0) end
+        return fn(path)
+      end, "autorun", {detached = true})
+    end
   end)
   event.listen("component_removed", function(_, address, ctype)
     if ctype == "filesystem" then filesystem.umount(address) end

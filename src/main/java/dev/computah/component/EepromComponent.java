@@ -133,4 +133,14 @@ public class EepromComponent extends Component {
         if (!c.readOnly()) update(new Contents(c.code(), c.data(), c.label(), true));
         return new Object[]{true};
     }
+
+    @Override
+    public java.util.Map<String, String> deviceInfo() {
+        java.util.Map<String, String> m = super.deviceInfo();
+        m.put("description", "EEPROM");
+        m.put("product", contents.label());
+        m.put("capacity", String.valueOf(CODE_SIZE));
+        m.put("size", String.valueOf(contents.code().length));
+        return m;
+    }
 }

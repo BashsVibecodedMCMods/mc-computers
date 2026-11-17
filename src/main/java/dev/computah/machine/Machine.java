@@ -107,8 +107,23 @@ public final class Machine extends Component {
         return new Object[]{state == State.RUNNING};
     }
 
-    @Callback(doc = "function([frequency:number[, duration:number]]) -- Plays a tone.")
+    @Override
+    public java.util.Map<String, String> deviceInfo() {
+        java.util.Map<String, String> m = super.deviceInfo();
+        m.put("description", "Computer");
+        m.put("product", host.describe());
+        m.put("capacity", String.valueOf(totalMemory()));
+        MachineSpec s = spec;
+        if (s != null) m.put("width", String.valueOf(s.maxComponents()));
+        return m;
+    }
+
+    @Callback(doc = "function([frequency:number|pattern:string[, duration:number]]) -- Plays a tone, or a pattern of short (.) and long (-) beeps.")
     public Object[] beep(Context ctx, Arguments args) throws ComponentException {
+        if (args.isString(0)) {
+            host.beepPattern(args.checkString(0));
+            return new Object[0];
+        }
         double freq = Math.max(20, Math.min(2000, args.optDouble(0, 440)));
         double duration = Math.max(0.05, Math.min(5, args.optDouble(1, 0.1)));
         host.beep(freq, duration);

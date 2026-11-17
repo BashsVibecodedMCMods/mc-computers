@@ -204,4 +204,14 @@ public class ModemComponent extends Component implements dev.computah.api.Persis
         System.arraycopy(values, 0, sig, 4, values.length);
         signalAll("modem_message", sig);
     }
+
+    @Override
+    public Map<String, String> deviceInfo() {
+        Map<String, String> m = super.deviceInfo();
+        m.put("description", isWireless() ? "Wireless network card" : "Network card");
+        m.put("product", isWireless() ? "Computah wireless card tier " + wirelessTier : "Computah network card");
+        m.put("capacity", String.valueOf(MAX_PACKET_SIZE));
+        if (wirelessTier == 1) m.put("width", String.valueOf((int) strength));
+        return m;
+    }
 }

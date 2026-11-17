@@ -139,6 +139,13 @@ function component.doc(address, method)
   return natives.doc(address, method)
 end
 
+--- Components have no fields, only methods (kept for OpenComputers programs).
+function component.fields(address)
+  checkArg(1, address, "string")
+  if not natives.type(address) then return nil, "no such component" end
+  return {}
+end
+
 --- Finds the full address of a component from an abbreviated one (a prefix), optionally of a given type.
 function component.get(abbreviated, ctype)
   checkArg(1, abbreviated, "string")
@@ -181,8 +188,39 @@ local computer = {
   beep = natives.beep,
 }
 
+computer.getDeviceInfo = natives.deviceInfo
+
 function computer.getArchitecture()
   return "Lua 5.2"
+end
+
+function computer.getArchitectures()
+  return {"Lua 5.2"}
+end
+
+--- Only "Lua 5.2" exists. Returns false (no change needed), or nil and an error for anything else.
+function computer.setArchitecture(architecture)
+  checkArg(1, architecture, "string")
+  if architecture ~= "Lua 5.2" then return nil, "unknown architecture" end
+  return false
+end
+
+function computer.isRobot()
+  return false
+end
+
+--- Computers have no user list (anyone who can reach a computer can use it).
+function computer.users()
+end
+
+function computer.addUser(name)
+  checkArg(1, name, "string")
+  return nil, "user lists are not supported"
+end
+
+function computer.removeUser(name)
+  checkArg(1, name, "string")
+  return false
 end
 
 --- Waits for the next signal, or until `timeout` seconds pass. Returns the signal name and its values, or nothing.

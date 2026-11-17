@@ -9,8 +9,14 @@ local event = {handlers = {}}
 local timers = {}
 local nextTimer = 1
 
+--- Called with a message when an event listener or timer fails. Logs to dmesg; replace it to handle errors yourself.
+function event.onError(message)
+  kernel.log(tostring(message))
+end
+
 local function report(what, err)
-  kernel.log(what .. ": " .. tostring(err))
+  local ok = pcall(event.onError, what .. ": " .. tostring(err))
+  if not ok then kernel.log(what .. ": " .. tostring(err)) end
 end
 
 --- Calls callback(name, ...) for every signal with this name. Returning false from the callback removes it.

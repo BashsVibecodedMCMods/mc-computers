@@ -217,6 +217,42 @@ function process.data()
   return process.rootData
 end
 
+--- OpenOS-style information about a process (default: the running one): {path, command, env, data, parent, id, status}.
+function process.info(t)
+  if type(t) == "number" then t = process.byId(t) end
+  t = t or current
+  if not t then return nil, "no such process" end
+  return {
+    id = t.id, path = t.data.path, command = t.name, env = t.data.env, data = t.data, status = t.status,
+    parent = t.parent and t.parent.id,
+  }
+end
+
+--- The path, environment and name of the running process.
+function process.running()
+  local t = current
+  if not t then return nil end
+  return t.data.path, t.data.env, t.name
+end
+
+--- Loads a program (path or function) as a coroutine, like OpenOS: resume it to run it. `env` defaults to a new
+--- environment based on the globals; `init` is called first inside the coroutine.
+function process.load(path, env, init, name)
+  checkArg(1, path, "string", "function")
+  checkArg(3, init, "function", "nil")
+  local fn, reason
+  if type(path) == "function" then
+    fn = path
+  else
+    fn, reason = kernel.loadfile(path, env or setmetatable({}, {__index = _G}))
+    if not fn then return nil, reason end
+  end
+  return coroutine.create(function(...)
+    if init then init() end
+    return fn(...)
+  end)
+end
+
 --- Makes the thread's current or next wait fail with "interrupted" (Ctrl+C).
 function process.interrupt(t)
   if t and t.status ~= "dead" then

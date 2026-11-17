@@ -57,7 +57,16 @@ end
 
 local process = require("process")
 require("event")
-require("component")
+-- component and computer are the sandbox's own global tables (package.loaded points at them, so require returns
+-- them). These files only add OS functions to those tables; the raw functions EEPROM code uses stay as they are.
+local function extend(name)
+  local path = "/lib/" .. name .. ".lua"
+  local fn, reason = kernel.loadfile(path)
+  if not fn then error("failed loading " .. path .. ": " .. tostring(reason), 0) end
+  package.loaded[name] = fn(name, path, kernel) or package.loaded[name]
+end
+extend("component")
+extend("computer")
 require("term")
 require("io")
 require("os")

@@ -27,6 +27,27 @@ public abstract class Component {
         this.slot = slot;
     }
 
+    /**
+     * Description for computer.getDeviceInfo(): at least "class", "description", "vendor" and "product", plus
+     * whatever applies ("capacity", "width", "size", "clock"), as in OpenComputers.
+     */
+    public java.util.Map<String, String> deviceInfo() {
+        java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
+        String t = type();
+        m.put("class", switch (t) {
+            case "gpu", "screen" -> "display";
+            case "filesystem", "eeprom", "disk_drive" -> "volume";
+            case "modem" -> "network";
+            case "keyboard" -> "input";
+            case "computer" -> "system";
+            default -> "generic";
+        });
+        m.put("description", t.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + t.substring(1).replace('_', ' '));
+        m.put("vendor", "Computah");
+        m.put("product", t);
+        return m;
+    }
+
     /** Machines that currently see this component. */
     public final Set<Machine> machines() {
         return machines;

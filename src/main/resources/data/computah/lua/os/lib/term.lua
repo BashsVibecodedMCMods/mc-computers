@@ -72,6 +72,21 @@ function term.setCursorBlink(enabled)
   cursorBlink = enabled and true or false
 end
 
+function term.getCursorBlink()
+  return cursorBlink
+end
+
+--- The terminal's area on the screen: x, y, width, height (always the whole screen).
+function term.getGlobalArea()
+  local w2, h2 = term.getViewport()
+  return 1, 1, w2, h2
+end
+
+--- The address of the first keyboard attached to the terminal's screen, or nil.
+function term.keyboard()
+  return term.keyboards()[1]
+end
+
 function term.clear()
   if term.isAvailable() then
     w, h = gpu.getResolution()
@@ -365,6 +380,29 @@ function term.read(options)
     elseif name == "screen_resized" then
       w, h = term.getViewport()
     end
+  end
+end
+
+--- Like event.pull, but shows a blinking cursor at the cursor position while waiting.
+function term.pull(...)
+  local args = table.pack(...)
+  local timeout, first = nil, 1
+  if type(args[1]) == "number" then
+    timeout, first = args[1], 2
+  end
+  local deadline = timeout and computer.uptime() + timeout or math.huge
+  local on = false
+  while true do
+    local x, y = cx, cy
+    if term.isAvailable() then
+      on = cursorBlink and not on or not cursorBlink
+      drawCursor(on, x, y)
+    end
+    local remaining = deadline - computer.uptime()
+    local result = table.pack(event.pull(math.max(0, math.min(0.5, remaining)), table.unpack(args, first, args.n)))
+    drawCursor(false, x, y)
+    if result.n > 0 and result[1] ~= nil then return table.unpack(result, 1, result.n) end
+    if computer.uptime() >= deadline then return nil end
   end
 end
 

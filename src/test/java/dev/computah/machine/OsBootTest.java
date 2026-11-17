@@ -39,10 +39,27 @@ public class OsBootTest {
         Machine machine;
 
         Rig(long memory) {
+            this(memory, null);
+        }
+
+        /** biosPrefix: Lua run before the normal BIOS (to record what the raw API looks like). */
+        Rig(long memory, String biosPrefix) {
             host.spec = new MachineSpec(memory, 16, 2, 5, 64 * 1024);
             machine = new Machine(host);
-            machine.setComponents(List.of(screen, keyboard, gpu, os, hdd, eeprom));
+            EepromComponent chip = biosPrefix == null ? eeprom : new EepromComponent(UUID.randomUUID().toString(),
+                    new EepromComponent.Contents((biosPrefix + "\n" + PartItem.biosCode()).getBytes(StandardCharsets.UTF_8), new byte[0], "BIOS", false), c -> {
+            });
+            machine.setComponents(List.of(screen, keyboard, gpu, os, hdd, chip));
             assertTrue(machine.start());
+        }
+
+        /** Writes a file to the hard drive and runs it with `lua`, waiting for `marker` on screen. */
+        void runScript(String script, String marker) throws Exception {
+            try (var h = hdd.fileSystem().open("t.lua", dev.computah.fs.FileSystem.Mode.WRITE)) {
+                h.write(script.getBytes(StandardCharsets.UTF_8));
+            }
+            type("lua /mnt/" + hdd.address().substring(0, 3) + "/t.lua");
+            run(() -> screenText().contains(marker), 4000);
         }
 
         /** Saves the running machine and restores it into a new Machine with a new GPU object, like a reload. */
@@ -194,6 +211,94 @@ public class OsBootTest {
         rig.run(() -> rig.screenText().contains("coroutines"), 4000);
         String text = rig.screenText();
         assertTrue(text.contains("ok threads, ok listeners, ok timers, ok kill, ok detach, ok io, ok serialization, ok fs, ok coroutines"), text);
+        rig.machine.stop();
+    }
+
+    private static final String OPENOS_SCRIPT = """
+            local component, computer = require("component"), require("computer")
+            local fs, shell, term, text, process = require("filesystem"), require("shell"), require("term"), require("text"), require("process")
+            local note, uuid, sides, event, rc = require("note"), require("uuid"), require("sides"), require("event"), require("rc")
+            local r = {}
+            local function check(name, ok) if not ok then r[#r + 1] = name end end
+            -- The raw API EEPROM code uses is untouched by the OS.
+            check("raw invoke", component.invoke == rawRefs.invoke and component.list == rawRefs.list and component.proxy == rawRefs.proxy)
+            check("raw computer", computer.getBootAddress == rawRefs.getBootAddress and computer.uptime == rawRefs.uptime)
+            check("same tables", component == rawRefs.component and computer == rawRefs.computer)
+            -- component extensions
+            local gpu = component.getPrimary("gpu")
+            check("getPrimary", gpu and gpu.type == "gpu")
+            check("component.gpu", component.gpu and select(1, component.gpu.getResolution()) == 160)
+            check("isAvailable", component.isAvailable("gpu") and not component.isAvailable("modem"))
+            check("isPrimary", component.isPrimary(gpu.address))
+            check("fields", next(component.fields(gpu.address)) == nil)
+            -- computer
+            local info = computer.getDeviceInfo()
+            check("deviceInfo", info[gpu.address] and info[gpu.address].class == "display")
+            check("computer misc", computer.isRobot() == false and computer.runlevel() == 1 and computer.getArchitectures()[1] == "Lua 5.2")
+            computer.beep(".-")
+            -- filesystem
+            fs.makeDirectory("/tmp/real")
+            local f = io.open("/tmp/real/x.txt", "w") f:write("hi") f:close()
+            check("link", fs.link("/tmp/real", "/tmp/ln"))
+            check("isLink", select(2, fs.isLink("/tmp/ln")) == "/tmp/real")
+            check("through link", fs.exists("/tmp/ln/x.txt") and fs.realPath("/tmp/ln/x.txt") == "/tmp/real/x.txt")
+            local listed = {} for n in fs.list("/tmp") do listed[n] = true end
+            check("link listed", listed["ln/"])
+            check("proxy", fs.proxy("tmpfs") ~= nil)
+            check("autorun", fs.isAutorunEnabled() == false)
+            -- io
+            local p = io.popen("echo piped")
+            check("popen", p:read("a") == "piped\\n")
+            local tf = io.tmpfile() tf:write("x") tf:close()
+            -- process and shell
+            local i = process.info()
+            check("process.info", i and i.command == "lua" and i.path:match("lua.lua$"))
+            check("process.running", select(3, process.running()) == "lua")
+            local co = process.load(function(a) return a * 2 end)
+            check("process.load", select(2, coroutine.resume(co, 21)) == 42)
+            check("aliases", shell.getAlias("ll") == "ls -l")
+            shell.setAlias("hi", "echo hi")
+            local found = false for k in shell.aliases() do if k == "hi" then found = true end end
+            check("aliases()", found)
+            check("path", shell.getPath():find("/bin", 1, true))
+            -- term, text, note, uuid, sides, event, rc
+            check("term", term.getCursorBlink() ~= nil and select(3, term.getGlobalArea()) == 160 and term.keyboard() ~= nil)
+            event.push("ping2", 5)
+            check("term.pull", select(2, term.pull(1, "ping2")) == 5)
+            local lines = 0 for _ in text.wrappedLines("aaa bbb ccc", 4) do lines = lines + 1 end
+            check("wrappedLines", lines == 3)
+            check("removeEscapes", text.removeEscapes("\\27[31mred\\27[0m") == "red")
+            check("note", note.freq("A4") == 440 and note.name(69) == "A4" and note.midi("C4") == 60)
+            check("uuid", uuid.next():match("^%x+%-%x+%-4%x+%-[89ab]%x+%-%x+$"))
+            check("sides", sides.front == 3 and sides.north == 2 and sides.posx == 5)
+            local old = event.onError
+            local seen
+            event.onError = function(m) seen = m end
+            event.listen("bad", function() error("oops") end)
+            event.push("bad")
+            os.sleep(0.1)
+            event.onError = old
+            check("onError", seen and seen:find("oops", 1, true))
+            check("rc", rc.runCommand == rc.run and type(rc.allRunCommand("status")) == "table")
+            check("net", require("net").modem() == nil)
+            print("missing: " .. table.concat(r, ", ") .. ".")
+            """;
+
+    @Test
+    public void openOsLibrariesWork() throws Exception {
+        Rig rig = new Rig(2048 * 1024, "rawRefs = {invoke = component.invoke, list = component.list, proxy = component.proxy, "
+                + "getBootAddress = computer.getBootAddress, uptime = computer.uptime, component = component, computer = computer}");
+        rig.run(() -> rig.screenText().contains("/#"), 3000);
+        rig.runScript(OPENOS_SCRIPT, "missing:");
+        String text = rig.screenText();
+        assertTrue(text.contains("missing: ."), text);
+        // Programs that use component.getPrimary.
+        rig.type("flash -c");
+        rig.run(() -> rig.screenText().contains("checksum:"), 1000);
+        assertTrue(rig.screenText().contains("checksum:"), rig.screenText());
+        rig.type("ping");
+        rig.run(() -> rig.screenText().contains("ping: no network"), 1000);
+        assertTrue(rig.screenText().contains("ping: no network"), rig.screenText());
         rig.machine.stop();
     }
 

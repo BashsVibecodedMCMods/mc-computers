@@ -127,4 +127,15 @@ public class ScreenComponent extends Component {
     public Object[] isPrecise(Context ctx, Arguments args) {
         return new Object[]{precise};
     }
+
+    @Override
+    public java.util.Map<String, String> deviceInfo() {
+        java.util.Map<String, String> m = super.deviceInfo();
+        DisplayBuffer b = buffer;
+        m.put("description", "Monitor");
+        m.put("product", "Computah screen tier " + b.tier().tier());
+        m.put("width", b.tier().cols() + "x" + b.tier().rows());
+        m.put("size", blocksWide + "x" + blocksHigh);
+        return m;
+    }
 }

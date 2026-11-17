@@ -83,7 +83,18 @@ final class MachineApis {
             }
             return ValueFactory.valueOf(m.signal(LuaConverter.utf8(a.arg(1)), args));
         });
+        fn(n, "deviceInfo", (s, a) -> {
+            LuaTable t = new LuaTable();
+            for (Component c : m.components()) t.rawset(LuaConverter.str(c.address()), LuaConverter.toLua(c.deviceInfo()));
+            return t;
+        });
         fn(n, "beep", (s, a) -> {
+            if (a.arg(1) instanceof LuaString pattern) {
+                String p = LuaConverter.utf8(pattern);
+                if (!p.matches("[.\\- ]{0,64}")) throw new LuaError("bad argument #1 (pattern of '.' and '-' expected)");
+                m.host().beepPattern(p);
+                return Constants.NONE;
+            }
             double freq = a.arg(1).isNil() ? 440 : a.arg(1).checkDouble();
             double dur = a.arg(2).isNil() ? 0.1 : a.arg(2).checkDouble();
             m.host().beep(Math.max(20, Math.min(2000, freq)), Math.max(0.05, Math.min(5, dur)));

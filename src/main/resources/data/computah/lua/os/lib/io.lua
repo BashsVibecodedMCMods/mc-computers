@@ -220,6 +220,32 @@ function io.pipe()
   return writer, reader
 end
 
+--- Runs a shell command in the background and returns a stream connected to it: mode "r" (default) reads what it
+--- writes; mode "w" feeds its input.
+function io.popen(command, mode)
+  checkArg(1, command, "string")
+  checkArg(2, mode, "string", "nil")
+  mode = (mode or "r"):sub(1, 1)
+  if mode ~= "r" and mode ~= "w" then error("bad argument #2 (invalid mode)", 2) end
+  local writer, reader = io.pipe()
+  local t = process.spawn(function()
+    local ok, result = pcall(require("shell").execute, command)
+    if mode == "r" then writer:close() end
+    if not ok then error(result, 0) end
+  end, "popen")
+  if mode == "r" then
+    t.data.io.stdout = writer
+    return reader
+  end
+  t.data.io.stdin = reader
+  return writer
+end
+
+--- A new empty file in /tmp, opened for writing (and removed at reboot, with the rest of /tmp).
+function io.tmpfile()
+  return io.open(os.tmpname(), "w")
+end
+
 -- The io library ----------------------------------------------------------------
 
 local function data()

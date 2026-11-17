@@ -89,6 +89,21 @@ function text.wrap(s, width)
   return lines
 end
 
+--- Iterates over the lines of text wrapped to width (maxWidth is accepted for OpenOS programs and ignored).
+function text.wrappedLines(value, width, maxWidth)
+  local lines = text.wrap(value, width)
+  local i = 0
+  return function()
+    i = i + 1
+    return lines[i]
+  end
+end
+
+--- Removes ANSI escape sequences (colours) from a string.
+function text.removeEscapes(s)
+  return (s:gsub("\27%[[%d;]*%a", ""))
+end
+
 --- Human-readable byte counts.
 function text.size(n)
   if n >= 1024 * 1024 then return string.format("%.1fM", n / 1024 / 1024) end

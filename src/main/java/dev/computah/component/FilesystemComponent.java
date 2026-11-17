@@ -344,4 +344,14 @@ public class FilesystemComponent extends Component implements dev.computah.api.P
         o.handle().close();
         return new Object[0];
     }
+
+    @Override
+    public Map<String, String> deviceInfo() {
+        Map<String, String> m = super.deviceInfo();
+        m.put("description", fs.isReadOnly() ? "Read-only disk" : "Disk");
+        long total = fs.spaceTotal();
+        if (total != Long.MAX_VALUE) m.put("capacity", String.valueOf(total));
+        m.put("size", String.valueOf(fs.spaceUsed()));
+        return m;
+    }
 }

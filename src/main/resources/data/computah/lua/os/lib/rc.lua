@@ -88,6 +88,16 @@ function rc.disable(name)
   return save(cfg)
 end
 
+--- OpenOS names for rc.run.
+rc.runCommand = rc.run
+
+--- Runs a command on every running service. Returns a table {[name] = {ok, result}}.
+function rc.allRunCommand(command, ...)
+  local results = {}
+  for name in pairs(rc.running) do results[name] = table.pack(rc.run(name, command, ...)) end
+  return results
+end
+
 --- Starts every enabled service (at boot).
 function rc.startEnabled()
   for _, name in ipairs(config().enabled) do

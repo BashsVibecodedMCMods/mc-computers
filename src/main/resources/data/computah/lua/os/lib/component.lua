@@ -23,6 +23,15 @@ function component.getPrimary(ctype, quiet)
   error("no primary '" .. ctype .. "' available", 2)
 end
 
+--- Whether this component is the primary one of its type.
+function component.isPrimary(address)
+  checkArg(1, address, "string")
+  local ctype = component.type(address)
+  if not ctype then return false end
+  local p = component.getPrimary(ctype, true)
+  return p ~= nil and p.address == address
+end
+
 function component.setPrimary(ctype, address)
   checkArg(1, ctype, "string")
   checkArg(2, address, "string", "nil")
