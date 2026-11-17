@@ -1,0 +1,14 @@
+COMPONENTS
+
+Everything a computer can use is a component: its parts (gpu,
+filesystem, eeprom, modem, redstone), and blocks on its network or
+linked to it (screen, keyboard, disk_drive, inventory, tank, energy).
+
+  for address, type in component.list() do print(address, type) end
+  local gpu = component.proxy(component.list("gpu")())
+  component.gpu          -- the primary gpu (OS only)
+  component.invoke(address, "method", ...)
+  component.methods(address)  component.doc(address, "method")
+
+The `components -l -d` program lists them with documentation.
+Methods marked * run on the server thread and take a tick.

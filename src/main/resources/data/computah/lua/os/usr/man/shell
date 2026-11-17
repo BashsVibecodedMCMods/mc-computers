@@ -1,0 +1,18 @@
+SHELL
+
+Run programs by name; they are searched in $PATH (/bin:/usr/bin:/home/bin:.).
+
+  prog a "b c" 'd'     arguments, with quotes
+  prog > file          write output to a file (>> appends)
+  prog < file          read input from a file
+  prog 2> file         write errors to a file
+  a | b                a's output becomes b's input
+  a ; b                run a, then b
+  a && b               run b only if a succeeded (|| if it failed)
+  prog &               run in the background (see ps, kill)
+  $NAME ${NAME}        environment variables (set NAME=value)
+  *.lua                file name patterns
+
+Builtins: cd, pwd, set, unset, alias, unalias, exit.
+Keys: Tab completes, Up/Down history, Ctrl+C stops the running
+program, Ctrl+D on an empty line exits, Ctrl+Shift+V pastes.

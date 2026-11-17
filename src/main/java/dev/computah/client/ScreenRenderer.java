@@ -49,6 +49,11 @@ public class ScreenRenderer implements BlockEntityRenderer<ScreenBlockEntity> {
     }
 
     @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(ScreenBlockEntity be) {
+        return be.renderBox();
+    }
+
+    @Override
     public boolean shouldRenderOffScreen(ScreenBlockEntity be) {
         return true;
     }

@@ -1,0 +1,14 @@
+RC - background services
+
+Services are scripts in /etc/rc.d/NAME.lua that define start() and
+optionally stop(), status() or other commands. Services listed in
+/etc/rc.cfg start at boot.
+
+  rc                    list services
+  rc NAME start         start (also stop, restart, status)
+  rc NAME enable        start at boot (disable to undo)
+
+A service usually registers event listeners or starts a detached
+thread in start(). Settings for it go in /etc/rc.cfg as
+NAME = {...}; the script sees them as `args`. See
+/etc/rc.d/example.lua and /etc/rc.d/beacon.lua.

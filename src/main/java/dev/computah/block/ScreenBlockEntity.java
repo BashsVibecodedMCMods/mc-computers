@@ -178,8 +178,8 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         PacketDistributor.sendToPlayer(player, DisplayPayload.of(worldPosition, buffer().snapshot(), true, screenOn()));
     }
 
-    @Override
-    public net.minecraft.world.phys.AABB getRenderBoundingBox() {
+    /** The box covering the whole monitor, for render culling. */
+    public net.minecraft.world.phys.AABB renderBox() {
         net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(worldPosition);
         for (BlockPos p : blocks()) box = box.minmax(new net.minecraft.world.phys.AABB(p));
         return box.inflate(0.1);

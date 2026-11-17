@@ -19,7 +19,8 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 /** Client registration: GUIs, the monitor renderer, tier colours and link lines. */
-@EventBusSubscriber(modid = Computah.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Computah.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+@SuppressWarnings("removal")
 public final class ClientSetup {
     /** Tier tints for the (grey) OpenComputers case and screen textures. */
     public static final int[] TIER_COLORS = {0xFFFFFF, 0xC8C8C8, 0xFFD966, 0x7FE8FF};

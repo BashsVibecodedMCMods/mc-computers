@@ -1,0 +1,28 @@
+THREADS AND EVENTS
+
+Programs run as threads. While one waits for a signal, others run.
+
+  local thread = require("thread")
+  local t = thread.create(function(a, b)
+    while true do print(a, b) os.sleep(1) end
+  end, "hello", "world")
+  t:status()    -- "running", "ready", "waiting", "suspended", "dead"
+  t:join(5)     -- wait up to 5 seconds for it to end
+  t:suspend()  t:resume()  t:kill()
+  t:detach()    -- keep running after the program ends (background)
+
+Every waiting thread sees every signal, so threads don't steal each
+other's events.
+
+  local event = require("event")
+  event.pull([timeout], [name], [filters...])   wait for a signal
+  event.listen(name, callback)   call back on every such signal
+  event.ignore(name, callback)
+  event.timer(interval, callback, [times])
+  event.cancel(timerId)
+  event.push(name, ...)          queue your own signal
+
+Callbacks run between threads and must not block (no event.pull or
+os.sleep inside them). Common signals: key_down, key_up, clipboard,
+touch, drag, drop, scroll, modem_message, component_added,
+component_removed, redstone_changed, screen_resized.

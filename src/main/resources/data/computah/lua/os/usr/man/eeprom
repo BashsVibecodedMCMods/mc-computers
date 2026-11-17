@@ -1,0 +1,39 @@
+EEPROM - the BIOS chip
+
+Every computer runs the code on its EEPROM when it starts. A crafted
+EEPROM holds the Lua BIOS, which boots /init.lua from a drive.
+
+  Code area:  4096 bytes of Lua, run in the sandbox at boot.
+  Data area:  256 bytes; by convention the boot drive's address.
+  Label:      shown on the item (24 characters).
+  Read-only:  `flash --lock` locks code and label forever.
+
+The flash program:
+  flash bios.lua      write bios.lua to the EEPROM
+  flash -r out.lua    save the current code to a file
+  flash -c            size, checksum, read-only state
+  flash -l "My BIOS"  set the label
+  flash -d            show the data area (boot address)
+
+The eeprom component (component.eeprom):
+  get() set(code) getData() setData(data) getLabel() setLabel(l)
+  getSize() getDataSize() getChecksum() isReadOnly()
+  makeReadonly(checksum)
+set, setData, setLabel and makeReadonly take one tick each.
+
+Writing your own BIOS: the code runs with the globals component,
+computer, unicode and the Lua standard library. There is no OS:
+use component.invoke and computer.pullSignal directly. Minimal:
+
+  local gpu = component.list("gpu")()
+  local screen = component.list("screen")()
+  component.invoke(gpu, "bind", screen)
+  component.invoke(gpu, "set", 1, 1, "Hello from my BIOS")
+  while true do
+    local name, _, char = computer.pullSignal()
+    if name == "key_down" then computer.beep(440 + char) end
+  end
+
+If the code errors or returns, the computer stops and shows the
+error. A broken EEPROM can be reflashed from another computer, or
+replaced. Full guide: docs/EEPROM.md in the mod's source.

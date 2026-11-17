@@ -1,0 +1,3 @@
+-- beep [frequency [duration]]: plays a tone.
+local f, d = ...
+computer.beep(tonumber(f) or 440, tonumber(d) or 0.1)

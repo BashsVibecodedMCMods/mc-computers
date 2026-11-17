@@ -1,0 +1,23 @@
+GRAPHICS
+
+The GPU has a text layer and a pixel layer under it. Text cells with
+a transparent background (-1) show the pixels.
+
+Text: gpu.set(x, y, text), gpu.fill, gpu.copy, gpu.get,
+  gpu.setForeground(0xRRGGBB), gpu.setBackground(color or -1),
+  gpu.setStyle{bold=, italic=, underline=, strikethrough=,
+  inverse=, blink=}, gpu.setResolution(w, h)
+
+Pixels (colour indices 0-255; 0-15 the palette):
+  gpu.setPixel(x, y, c)  gpu.getPixel(x, y)
+  gpu.fillRect(x, y, w, h, c)  gpu.drawRect  gpu.drawLine
+  gpu.drawCircle(x, y, r, c, filled)  gpu.drawText(x, y, s, c, scale)
+  gpu.blit(x, y, w, h, data)  gpu.readPixels  gpu.copyPixels
+  gpu.clearPixels(c)  gpu.clearText()  gpu.findPixelColor(rgb)
+
+Sizes: tier 1 160x100 (16 colours), tier 2 320x200, tier 3 640x400.
+Buffers: gpu.allocateBuffer(), gpu.setActiveBuffer(i), gpu.bitblt,
+gpu.bitbltPixels for flicker-free drawing.
+
+The graphics library wraps this: graphics.clear, pixel, line, rect,
+circle, text, sprite, draw, loadImage. Try `gfxdemo`.

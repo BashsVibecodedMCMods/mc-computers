@@ -1,0 +1,9 @@
+EDIT
+
+edit [-r] <file>
+
+  Arrows, Home, End, PageUp, PageDown   move
+  Ctrl+S   save          Ctrl+Q   quit (twice if unsaved)
+  Ctrl+F   find          Ctrl+G   go to line
+  Ctrl+K   delete line   Ctrl+D   duplicate line
+  Ctrl+Shift+V           paste

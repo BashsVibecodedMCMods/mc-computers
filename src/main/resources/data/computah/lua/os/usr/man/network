@@ -1,0 +1,23 @@
+NETWORKING
+
+Network cards talk over cables (through relays, too); wireless cards
+over the air (tier 1: limited range, tier 2: unlimited and across
+dimensions).
+
+  local m = component.modem
+  m.open(123)
+  m.send(address, 123, "hello", 42)
+  m.broadcast(123, "anyone?")
+  local _, _, from, port, distance, a, b = event.pull("modem_message")
+
+The net library adds hostnames: net.discover(), net.resolve(name),
+net.send, net.broadcast, net.receive(timeout, port). Programs:
+ping, msg, hostname.
+
+Cables also connect computers to screens, keyboards, disk drives,
+adapters and redstone I/O blocks; they appear in component.list().
+Relays pass messages but not components.
+
+Wireless peripherals: use the Linker. Right-click a computer or rack,
+then right-click blocks to link them. With a wireless card the
+computer sees linked screens, drives and inventories as components.

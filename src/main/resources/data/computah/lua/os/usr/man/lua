@@ -1,0 +1,11 @@
+LUA
+
+Computers run Lua 5.2 (Cobalt). Loading precompiled bytecode is not
+allowed. Libraries: base, string, table, math, coroutine, bit32,
+utf8, os (clock, date, time), unicode, computer, component.
+
+Memory is limited by the RAM installed (computer.freeMemory()).
+A program that runs for 5 seconds without waiting for a signal gets
+"too long without yielding"; call os.sleep(0) in long loops.
+
+The `lua` program is an interactive prompt.

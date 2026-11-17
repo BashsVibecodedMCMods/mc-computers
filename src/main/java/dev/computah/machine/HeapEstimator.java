@@ -60,7 +60,7 @@ public final class HeapEstimator {
                 for (Prototype c : p.children) queue.add(c);
             } else if (o instanceof LuaThread t) {
                 total += THREAD;
-                DebugFrame f = t.getDebugState().getStackUnsafe();
+                DebugFrame f = t.getDebugState().getStack();
                 while (f != null) {
                     if (f.func != null) queue.add(f.func);
                     if (f.stack != null) {
