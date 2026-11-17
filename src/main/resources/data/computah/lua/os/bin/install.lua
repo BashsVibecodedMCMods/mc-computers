@@ -9,6 +9,11 @@ for fs, path in filesystem.mounts() do
   end
 end
 if #candidates == 0 then
+  if not source.isReadOnly() then
+    io.write("Computah OS is already installed on this drive (" .. source.address:sub(1, 8) .. ").\n"
+      .. "To install it on another drive, add that drive and boot from the OS floppy.\n")
+    return 0
+  end
   io.stderr:write("install: no writable drive found (put a hard drive in the computer)\n")
   return 1
 end

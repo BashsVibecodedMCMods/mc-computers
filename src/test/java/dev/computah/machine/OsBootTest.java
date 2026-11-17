@@ -95,6 +95,17 @@ public class OsBootTest {
         rig.type("echo hello world > /tmp/a.txt; cat /tmp/a.txt");
         rig.run(() -> rig.screenText().contains("hello world\n"), 2000);
         assertTrue(rig.screenText().contains("hello world\n"), rig.screenText());
+        // The cursor is erased from lines that were entered: only the current prompt line may show it.
+        int cursorRows = 0;
+        for (int y = 0; y < rig.display.rows(); y++) {
+            for (int x = 0; x < rig.display.cols(); x++) {
+                if (rig.display.bgAt(x, y) == 0xFFFFFF) {
+                    cursorRows++;
+                    break;
+                }
+            }
+        }
+        assertTrue(cursorRows <= 1, "cursor left behind on " + cursorRows + " rows");
 
         rig.type("lua -e");
         rig.type("free");

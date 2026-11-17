@@ -191,8 +191,13 @@ public class ComputahGameTests {
                     ScreenBlockEntity screen = (ScreenBlockEntity) helper.getBlockEntity(screenPos);
                     helper.assertTrue(screenText(screen.buffer()).contains("key 65"), "key reached the computer");
                     helper.assertTrue(screen.buffer().pixel(4, 4) == 200, "pixel drawn");
+                    helper.assertTrue(screen.screenOn(), "screen is lit while the computer runs");
                 })
                 .thenExecute(() -> be.core().stop())
+                .thenExecute(() -> {
+                    ScreenBlockEntity screen = (ScreenBlockEntity) helper.getBlockEntity(screenPos);
+                    helper.assertFalse(screen.screenOn(), "screen goes dark when the computer is off");
+                })
                 .thenSucceed();
     }
 

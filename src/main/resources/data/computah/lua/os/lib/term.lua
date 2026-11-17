@@ -195,20 +195,32 @@ local function cell(x, y)
   return ch, fg, bg
 end
 
+-- The cell under the cursor before it was drawn, so hiding the cursor puts back exactly what was there.
+local underCursor
+
 local function drawCursor(on, x, y)
-  local ch, fg, bg = cell(x, y)
-  if not ch then return end
-  local ofg, obg = gpu.getForeground(), gpu.getBackground()
   if on then
+    if underCursor then return end
+    local ch, fg, bg = cell(x, y)
+    if not ch then return end
+    underCursor = {x = x, y = y, ch = ch, fg = fg, bg = bg}
+    local ofg, obg = gpu.getForeground(), gpu.getBackground()
     gpu.setForeground(bg == -1 and 0 or bg)
     gpu.setBackground(fg)
-  else
-    gpu.setForeground(fg)
-    gpu.setBackground(bg)
+    gpu.set(x, y, ch)
+    gpu.setForeground(ofg)
+    gpu.setBackground(obg)
+  elseif underCursor then
+    local c = underCursor
+    underCursor = nil
+    if not gpu then return end
+    local ofg, obg = gpu.getForeground(), gpu.getBackground()
+    gpu.setForeground(c.fg)
+    gpu.setBackground(c.bg)
+    gpu.set(c.x, c.y, c.ch)
+    gpu.setForeground(ofg)
+    gpu.setBackground(obg)
   end
-  gpu.set(x, y, ch)
-  gpu.setForeground(ofg)
-  gpu.setBackground(obg)
 end
 
 local function fromOurKeyboard(address)

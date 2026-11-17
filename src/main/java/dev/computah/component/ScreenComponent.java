@@ -54,6 +54,26 @@ public class ScreenComponent extends Component {
         return on;
     }
 
+    private volatile boolean showingCrash;
+
+    /**
+     * Whether the monitor has power: a running computer uses it, or it shows the error of a computer that crashed.
+     * A monitor without power is dark, like a real screen when its computer is off.
+     */
+    public boolean powered() {
+        return !machines().isEmpty() || showingCrash;
+    }
+
+    /** Keeps the screen lit to show a crash message until a computer uses it again. */
+    public void setShowingCrash(boolean showing) {
+        showingCrash = showing;
+    }
+
+    @Override
+    public void onConnect(dev.computah.machine.Machine machine) {
+        showingCrash = false;
+    }
+
     public void setOn(boolean on) {
         this.on = on;
     }

@@ -112,7 +112,13 @@ public class ScreenBlockEntity extends MemberBlockEntity {
         return component;
     }
 
+    /** Whether the monitor shows its picture: switched on (screen.turnOn) and powered by a running computer. */
     public boolean screenOn() {
+        return component != null ? component.isOn() && component.powered() : false;
+    }
+
+    /** The screen.turnOn/turnOff setting, saved with the block. */
+    private boolean switchedOn() {
         return component != null ? component.isOn() : on;
     }
 
@@ -246,7 +252,7 @@ public class ScreenBlockEntity extends MemberBlockEntity {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putString("address", address);
-        tag.putBoolean("on", screenOn());
+        tag.putBoolean("on", switchedOn());
         saveDisplay();
         writeClient(tag);
     }

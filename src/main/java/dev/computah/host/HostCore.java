@@ -478,6 +478,7 @@ public final class HostCore implements MachineHost, ModemComponent.Location, Red
             for (Component c : external) {
                 if (c instanceof ScreenComponent s) {
                     GpuComponent.showCrash(s.buffer(), m.crashMessage());
+                    s.setShowingCrash(true);
                     break;
                 }
             }

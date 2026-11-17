@@ -61,7 +61,7 @@
   "gui.computah.screen.waiting": "Waiting for the screen...",
   "gui.computah.running": "Running",
   "gui.computah.off": "Off",
-  "gui.computah.crashed": "Crashed (hover)",
+  "gui.computah.crashed": "Crashed",
   "gui.computah.power_on": "Turn on",
   "gui.computah.power_off": "Turn off",
   "gui.computah.parts": "Parts",

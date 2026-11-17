@@ -59,18 +59,21 @@ public class HostMenu extends AbstractContainerMenu {
         }
     }
 
-    /** Positions of the part slots: one column per slot type group. */
+    /**
+     * Positions of the part slots: one column per slot type group (cards, memory, drives, CPU and EEPROM), below the
+     * title. No column has more than three slots, so they end above the inventory label.
+     */
     public static int[][] slotPositions(PartKind.SlotType[] layout) {
         int[][] out = new int[layout.length][];
         int[] counts = new int[4];
         for (int i = 0; i < layout.length; i++) {
             int col = switch (layout[i]) {
                 case CARD -> 0;
-                case CPU, RAM -> 1;
+                case RAM -> 1;
                 case HDD, FLOPPY -> 2;
-                case EEPROM -> 3;
+                case CPU, EEPROM -> 3;
             };
-            out[i] = new int[]{80 + col * 22, 8 + counts[col]++ * 18};
+            out[i] = new int[]{80 + col * 22, 18 + counts[col]++ * 18};
         }
         return out;
     }

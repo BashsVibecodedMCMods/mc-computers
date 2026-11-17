@@ -102,7 +102,8 @@ graphics.saveImage("/home/shot.cpi", graphics.capture(1, 1, 64, 64))
 
 Screens of the same tier and facing placed next to each other merge into one monitor, up to **8 blocks wide and
 6 blocks high**; larger arrangements split into several monitors. The bezel textures connect, so a monitor has one
-frame around its outside and no seams between its blocks. A monitor keeps its picture when the world reloads. The resolution does not change with size – a
+frame around its outside and no seams between its blocks. A monitor keeps its picture when the world reloads. It is dark while no running computer uses it (except to show
+the error of a computer that crashed), and lights up again when a computer that sees it starts. The resolution does not change with size – a
 bigger monitor shows the same image larger. Attach a **keyboard** to any block of the monitor (place it on the
 screen) to type: right-click the monitor or keyboard to open the screen GUI. On tier 2 and 3 monitors, clicks in
 the GUI and right-clicks on the monitor face (sneak, or without a keyboard) send `touch` signals with the cell
