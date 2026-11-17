@@ -1,0 +1,26 @@
+NOTE - Computah OS library
+(generated from docs/API.md)
+
+Musical notes for computer.beep. A note is a name
+("A4", "C#5", "Bb3"), a MIDI number (69 = A4) or a
+frequency in Hz (above 127).
+
+note.midi(note) -> number
+
+The MIDI number of a note.
+
+note.freq(note) -> number
+
+The frequency of a note in Hz: note.freq("A4") →
+440.
+
+note.name(note) -> string
+
+The name of a note: note.name(60) → "C4".
+
+note.play(note[, duration])
+
+Plays a note for duration seconds (default 0.25).
+Frequencies are limited to 20–2000 Hz.
+
+  for _, n in ipairs({"C4", "E4", "G4", "C5"}) do note.play(n, 0.2) os.sleep(0.25) end

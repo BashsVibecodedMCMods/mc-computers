@@ -1,0 +1,69 @@
+COMPONENT - Computah OS library
+(generated from docs/API.md)
+
+The OS adds *primary components* to the machine's
+component library: for each type, one component is
+the default (the first found, or the one chosen
+with setPrimary). All the raw functions (list,
+invoke, proxy, type, slot, methods, doc, get,
+fields) are unchanged; see LUA.md.
+
+component.isAvailable(type) -> boolean
+
+Whether a component of this type is available
+(that is, there is a primary one).
+
+- type (string): a component type such as "gpu" or
+  "modem".
+
+  if component.isAvailable("modem") then print("networking available") end
+
+component.getPrimary(type[, quiet]) -> proxy
+
+The proxy of the primary component of a type. The
+first call picks the first component of that type
+found; when it is removed, the next call picks
+another.
+
+- type (string): component type.
+- quiet (boolean): return nil instead of raising
+  an error when there is none.
+- Errors: no primary '<type>' available (unless
+  quiet).
+
+  local gpu = component.getPrimary("gpu")
+  gpu.set(1, 1, "hello")
+
+component.setPrimary(type, address)
+
+Makes a component the primary one of its type, or
+with address = nil forgets the choice (the next
+getPrimary picks the first one found again).
+Pushes a component_available signal.
+
+- address (string or nil): full address or a
+  unique prefix.
+
+component.isPrimary(address) -> boolean
+
+Whether the component with this address is the
+primary one of its type.
+
+Primary components as fields
+
+component.<type> is shorthand for
+component.getPrimary("<type>", true):
+component.gpu, component.modem, component.eeprom,
+component.redstone, ... It is nil when there is no
+component of that type.
+
+  component.gpu.setForeground(0xFF0000)
+
+Signals
+
+Signal - Values - When
+component_available - type - a component of a type
+    without a primary appears, or setPrimary was
+    called
+component_unavailable - type - the primary
+    component of a type is removed

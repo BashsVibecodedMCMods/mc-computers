@@ -1,0 +1,44 @@
+TEXT - Computah OS library
+(generated from docs/API.md)
+
+String helpers.
+
+text.trim(s) -> string
+
+Removes leading and trailing whitespace.
+
+text.split(s[, separator[, keepEmpty]]) -> table
+
+Splits on a Lua pattern (default: runs of
+whitespace). Empty parts are dropped unless
+keepEmpty.
+
+text.tokenize(s) -> table
+
+Splits a command line into words, keeping quoted
+parts together.
+
+text.padRight(s, width) / text.padLeft(s, width) -> string
+
+Pads with spaces to a width (in characters).
+
+text.detab(s[, tabWidth]) -> string
+
+Replaces tabs with spaces (default width 4).
+
+text.wrap(s, width) -> table
+
+Wraps text to a width; returns the lines.
+
+text.wrappedLines(s, width[, maxWidth]) -> iterator
+
+Iterates over wrapped lines (maxWidth is accepted
+for OpenOS programs and ignored).
+
+text.removeEscapes(s) -> string
+
+Removes ANSI colour codes.
+
+text.size(bytes) -> string
+
+A human-readable size: text.size(2048) → "2.0K".

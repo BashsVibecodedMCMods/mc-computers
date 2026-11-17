@@ -1,0 +1,92 @@
+EVENT - Computah OS library
+(generated from docs/API.md)
+
+Signals and timers. Every waiting thread receives
+every signal, so threads never steal events from
+each other.
+
+event.pull([timeout,] [name,] ...) -> name, ...
+
+Waits for a signal and returns its name and
+values, or nil after timeout seconds.
+
+- timeout (number): seconds to wait at most.
+  Without it, waits forever.
+- name (string): a Lua pattern the signal name
+  must match fully ("key_.*"), or an exact name.
+- ...: filters; each non-nil filter must equal the
+  signal's value at that position.
+- Errors: interrupted when the user presses Ctrl+C
+  while this program is in the foreground.
+
+  local _, _, char, code = event.pull("key_down")             -- any key
+  local _, addr, x, y = event.pull(5, "touch")                -- a touch within 5 s
+  local _, _, from, port, _, msg = event.pull("modem_message", nil, nil, 42)  -- port 42 only
+
+event.pullFiltered([timeout,] filter) -> name, ...
+
+Waits for a signal for which filter(name, ...)
+returns true.
+
+  local ev = {event.pullFiltered(function(name, _, char) return name == "key_down" and char == 13 end)}
+
+event.pullMultiple([timeout,] name, ...) -> name, ...
+
+Waits for a signal with any of the given names
+(exact names).
+
+event.listen(name, callback) -> boolean
+
+Calls callback(name, ...) for every signal with
+this exact name, whatever thread is running.
+Returns false if that callback was already
+registered. If the callback returns false it is
+removed.
+
+Callbacks run between threads and must not block:
+no event.pull, os.sleep or computer.pullSignal
+inside them. Errors are passed to event.onError.
+
+  event.listen("redstone_changed", function(_, address, side, old, new)
+    print("side " .. side .. " is now " .. new)
+  end)
+
+event.ignore(name, callback) -> boolean
+
+Removes a callback added with event.listen.
+Returns whether it was registered.
+
+event.timer(interval, callback[, times]) -> id
+
+Calls callback() after interval seconds, times
+times (default 1; math.huge repeats forever).
+Timers run like listeners (must not block).
+Returns an id for event.cancel.
+
+  local id = event.timer(1, function() computer.beep() end, math.huge)
+
+event.cancel(id) -> boolean
+
+Stops a timer. Returns whether it existed.
+
+event.push(name, ...) -> boolean
+
+Queues a signal for this computer (same as
+computer.pushSignal). Values may be nil, booleans,
+numbers, strings and simple tables (copied).
+Returns false if the queue (256 signals) is full.
+
+event.onError(message)
+
+Called with a message when a listener or timer
+raises an error. By default it writes the message
+to the kernel log (see dmesg). Assign your own
+function to handle errors differently.
+
+  event.onError = function(msg) io.stderr:write(msg .. "\n") end
+
+event.handlers
+
+Table {[name] = {callbacks...}} of the registered
+listeners (read it, don't change it; use
+listen/ignore).

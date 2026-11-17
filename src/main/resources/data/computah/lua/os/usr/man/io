@@ -1,0 +1,112 @@
+IO - Computah OS library
+(generated from docs/API.md)
+
+Streams: files, the terminal and pipes. io.stdin,
+io.stdout and io.stderr belong to the running
+process, so the shell can redirect them per
+program. print writes to io.stdout.
+
+io.open(path[, mode]) -> stream
+
+Opens a file as a buffered stream. mode: "r"
+(default), "w" (truncate), "a" (append),
+optionally with "b" (no difference: all files are
+bytes). Returns nil, reason if it can't be opened.
+
+  local f = assert(io.open("/home/notes.txt", "w"))
+  f:write("line 1\n", 42, "\n")
+  f:close()
+  for line in io.lines("/home/notes.txt") do print(line) end
+
+io.lines([path[, format...]]) -> iterator
+
+Iterates over the lines of a file (closing it at
+the end), or of io.input() without a path. Formats
+as for stream:read.
+
+io.read(format...) -> ...
+
+io.input():read(...). From the terminal this reads
+a line typed by the user.
+
+io.write(value...) -> stream
+
+io.output():write(...).
+
+io.input([file]) -> stream
+
+The current process's standard input; with a
+stream or a path, replaces it first.
+
+io.output([file]) -> stream
+
+The current process's standard output; with a
+stream or a path (opened for writing), replaces it
+first.
+
+io.error([file]) -> stream
+
+The current process's standard error stream; with
+a stream, replaces it first. On the terminal it
+prints in red.
+
+io.close([stream])
+
+Closes a stream (default: the standard output).
+
+io.type(value) -> string
+
+"file" for an open stream, "closed file" for a
+closed one, otherwise nil.
+
+io.popen(command[, mode]) -> stream
+
+Runs a shell command in the background and
+connects to it. Mode "r" (default): returns a
+stream reading what the command writes. Mode "w":
+returns a stream whose data becomes the command's
+input; close it to finish.
+
+  local p = io.popen("ls /bin")
+  for line in p:lines() do print("program: " .. line) end
+
+io.tmpfile() -> stream
+
+Creates a new empty file in /tmp and returns it
+open for writing.
+
+io.pipe() -> writer, reader
+
+A connected pair of streams: what is written to
+writer can be read from reader (reads wait for
+data; they end when the writer is closed). Used by
+the shell for a | b.
+
+io.stream(backend) -> stream
+
+Makes a buffered stream from a table with any of
+readChunk(self) -> string|nil, writeChunk(self,
+data), seekTo(self, whence, offset) and
+closeIt(self). For writing your own stream types.
+
+io.isTerminal(stream) -> boolean
+
+Whether a stream is the terminal (programs format
+output differently for files and pipes, like ls).
+
+Stream methods
+
+Method - Description
+stream:read(format...) - "l" a line without the
+    newline (default), "L" with it, "n" a number,
+    "a" everything left, or a number of bytes.
+    Returns nil at the end.
+stream:lines([format]) - Iterator over reads.
+stream:write(value...) - Writes strings and
+    numbers; returns the stream, or nil, reason.
+stream:seek([whence[, offset]]) - "set", "cur"
+    (default) or "end"; returns the new position.
+    Files only.
+stream:close() - Closes it.
+stream:flush(), stream:setvbuf() - No-ops, for
+    compatibility.

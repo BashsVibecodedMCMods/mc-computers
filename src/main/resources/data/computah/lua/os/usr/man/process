@@ -1,0 +1,94 @@
+PROCESS - Computah OS library
+(generated from docs/API.md)
+
+The scheduler. Every program runs as a thread (a
+coroutine); the scheduler waits for signals on
+behalf of all threads and gives every waiting
+thread every signal. A process is a thread
+together with its data: environment variables,
+working directory and standard streams, inherited
+from the thread that started it. Most programs use
+thread, event and shell instead.
+
+process.spawn(fn[, name[, options]]) -> thread
+
+Starts fn in a new thread, a child of the running
+one. Options: detached (keep running after the
+parent ends), args (packed arguments for fn), data
+(process data to use instead of inheriting).
+Returns the thread record (methods below).
+
+process.current() -> thread
+
+The running thread, or nil inside event listeners
+and timers.
+
+process.byId(id) -> thread
+
+A thread by id, or nil.
+
+process.list() -> table
+
+All threads: {id, name, status, parent, detached,
+uptime} each.
+
+process.info([thread]) -> table
+
+OpenOS-style information about a process (default:
+the running one; also accepts an id): {id, path,
+command, env, data, status, parent}. path is the
+program file, command its name. Returns nil,
+reason if there is none.
+
+process.running() -> path, env, command
+
+The running process's program path, environment
+and name.
+
+process.data() -> table
+
+The running process's data: {env, cwd, io =
+{stdin, stdout, stderr}, path}.
+
+process.load(program[, env[, init[, name]]]) -> coroutine
+
+Loads a program file (or wraps a function) as a
+coroutine, like OpenOS. Resume it to run it with
+arguments. env is the program's environment
+(default: a new one based on the globals); init is
+called inside the coroutine first. Returns nil,
+reason if the file can't be loaded. Waiting inside
+it works normally.
+
+  local co = process.load("/home/job.lua")
+  coroutine.resume(co, "arg1")
+
+process.interrupt(thread)
+
+Makes the thread's current or next wait raise
+interrupted (what Ctrl+C does to the foreground
+program).
+
+process.run()
+
+Runs the scheduler forever. Only the kernel calls
+this.
+
+Thread methods
+
+The records returned by process.spawn (and wrapped
+by thread.create):
+
+Method - Description
+t:getStatus() - "running" (the caller), "ready",
+    "waiting", "suspended" or "dead".
+t:join([timeout]) - Waits until it ends; true, or
+    false on timeout.
+t:kill() - Ends it (and its attached children).
+t:suspend() / t:resume() - Pause it (it gets no
+    signals) / let it continue.
+t:detach() / t:attach([parent]) - Survive / don't
+    survive the parent ending.
+t:results() - What its function returned, or nil,
+    error.
+t.id, t.name, t.data, t.error - Fields.

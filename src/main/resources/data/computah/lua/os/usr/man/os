@@ -1,0 +1,52 @@
+OS - Computah OS library
+(generated from docs/API.md)
+
+The standard os functions (clock, date, time,
+difftime; see LUA.md) plus:
+
+os.sleep([seconds])
+
+Waits; other threads keep running and no signals
+are lost (every thread sees every signal).
+os.sleep(0) waits one tick. Errors with
+interrupted on Ctrl+C.
+
+os.getenv([name]) -> value
+
+An environment variable of the current process
+(inherited from its parent), or all of them as a
+table without a name. PWD is the working
+directory.
+
+os.setenv(name, value) -> value
+
+Sets an environment variable of the current
+process (nil removes it). Setting PWD changes the
+working directory.
+
+os.exit([code])
+
+Ends the running program. The shell treats 0, true
+or nothing as success.
+
+os.remove(path) -> boolean
+
+Removes a file or directory (filesystem.remove).
+
+os.rename(from, to) -> boolean
+
+Moves or renames (filesystem.rename).
+
+os.tmpname() -> string
+
+A path in /tmp that doesn't exist yet.
+
+os.execute([command]) -> boolean, code
+
+Runs a shell command line and waits for it.
+
+os.hostname() -> string
+
+This computer's name: $HOSTNAME, else
+/etc/hostname, else the first 8 characters of its
+address.

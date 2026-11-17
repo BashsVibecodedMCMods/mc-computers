@@ -1,0 +1,42 @@
+THREAD - Computah OS library
+(generated from docs/API.md)
+
+Threads for programs: functions that run alongside
+the current program. A thread is attached to the
+process that created it and is killed when that
+process ends, unless detached.
+
+thread.create(fn, ...) -> thread
+
+Starts fn(...) in a new thread and returns a
+thread object:
+
+Method - Description
+t:status() - "running", "ready", "waiting",
+    "suspended" or "dead"
+t:join([timeout]) - wait for it to end; true, or
+    false on timeout
+t:kill(), t:suspend(), t:resume() - stop / pause /
+    continue
+t:detach(), t:attach() - keep running in the
+    background / stop with the parent
+t.id - its process id (see ps)
+
+  local t = thread.create(function(n)
+    for i = 1, n do print("tick " .. i) os.sleep(1) end
+  end, 3)
+  t:join()
+
+thread.current() -> thread
+
+The running thread record, or nil.
+
+thread.waitForAll(threads[, timeout]) -> boolean
+
+Waits until every thread in the list ends. False
+if the timeout passed first.
+
+thread.waitForAny(threads[, timeout]) -> boolean
+
+Waits until any thread in the list ends. False if
+the timeout passed first.

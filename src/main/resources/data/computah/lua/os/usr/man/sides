@@ -1,0 +1,19 @@
+SIDES - Computah OS library
+(generated from docs/API.md)
+
+Side numbers for redstone and side-based methods;
+they match Minecraft's directions. Names map to
+numbers and numbers to names.
+
+Number - Names
+0 - bottom, down, negy
+1 - top, up, posy
+2 - north, back, negz
+3 - south, front, forward, posz
+4 - west, right, negx
+5 - east, left, posx
+
+The relative names (front, back, left, right)
+exist for OpenComputers programs; computers have
+no facing, so they always mean the compass
+directions above.

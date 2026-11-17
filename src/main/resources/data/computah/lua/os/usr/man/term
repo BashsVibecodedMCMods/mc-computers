@@ -1,0 +1,109 @@
+TERM - Computah OS library
+(generated from docs/API.md)
+
+The terminal: text with a cursor, wrapping and
+scrolling on the primary GPU and screen, and line
+input from the keyboards attached to that screen.
+
+term.write(value[, wrap])
+
+Writes text at the cursor and moves it. wrap
+(default true) wraps at the right edge.
+Understands \n, \r, \t, \b and ANSI colour codes
+ESC[...m (0 reset, 1 bold, 3 italic, 4 underline,
+5 blink, 7 inverse, 9 strikethrough, 30–37/90–97
+foreground, 40–47/100–107 background, 39/49
+default colours).
+
+  term.write("\27[31mError:\27[0m something failed\n")
+
+term.read([options]) -> string
+
+Reads a line with editing: arrows, Home/End,
+Backspace/Delete, Up/Down for history, Tab for
+completion, Ctrl+Shift+V paste. Returns the line
+without the newline, "" after Ctrl+C, or nil after
+Ctrl+D on an empty line (and when there is no
+screen). Options table:
+
+- history (table): previous lines; the new line is
+  appended.
+- complete (function(line, cursorPos) -> list):
+  completions cycled with Tab.
+- pwchar (string): shown instead of each typed
+  character.
+- nobreak (boolean): don't move to a new line at
+  the end.
+
+term.pull([timeout,] [name,] ...) -> name, ...
+
+event.pull with a blinking cursor shown at the
+cursor position while waiting.
+
+term.clear()
+
+Clears the screen and puts the cursor at the top
+left.
+
+term.clearLine()
+
+Clears the cursor's line and moves the cursor to
+its start.
+
+term.getCursor() -> x, y
+
+The cursor position.
+
+term.setCursor(x, y)
+
+Moves the cursor.
+
+term.getCursorBlink() -> boolean
+
+Whether the cursor blinks while reading input.
+
+term.setCursorBlink(enabled)
+
+Turns cursor blinking on or off.
+
+term.getViewport() -> width, height
+
+The terminal's size in characters.
+
+term.getGlobalArea() -> x, y, width, height
+
+The terminal's area on the screen (always the
+whole screen: 1, 1, width, height).
+
+term.scroll([lines])
+
+Scrolls the text up (default one line).
+
+term.isAvailable() -> boolean
+
+Whether the terminal has a GPU and screen.
+
+term.gpu() -> proxy
+
+The terminal's GPU.
+
+term.screen() -> address
+
+The terminal's screen.
+
+term.keyboard() -> address
+
+The first keyboard attached to the terminal's
+screen, or nil.
+
+term.keyboards() -> table
+
+All keyboards attached to the terminal's screen.
+
+term.bind([gpu[, screen]]) -> boolean
+
+Binds the terminal to a GPU and screen (addresses;
+default the primary ones), sets the maximum
+resolution and clears the screen. Happens
+automatically at boot and when a GPU or screen
+appears.

@@ -1,0 +1,44 @@
+KEYBOARD - Computah OS library
+(generated from docs/API.md)
+
+Key codes and modifier state. Key codes in
+key_down/key_up signals are GLFW key codes (not
+the LWJGL 2 codes OpenComputers uses); use
+keyboard.keys instead of numbers.
+
+keyboard.keys
+
+Table mapping names to codes and codes back to
+names: letters a–z, digits "0"–"9", enter, back
+(backspace), tab, space, escape, delete, insert,
+up, down, left, right, home, end, pageUp,
+pageDown, f1–f12, lshift, rshift, lcontrol,
+rcontrol, lmenu, rmenu (alt), numpad0–numpad9,
+numpadenter and punctuation names (minus, equals,
+comma, period, slash, semicolon, apostrophe,
+lbracket, rbracket, backslash, grave).
+
+  local _, _, char, code = event.pull("key_down")
+  if code == keyboard.keys.up then ... end
+
+keyboard.isKeyDown(code) -> boolean
+
+Whether a key (code or name) is held, according to
+the key_down/key_up signals seen so far.
+
+keyboard.isControlDown() -> boolean
+
+Whether either Control key is held.
+
+keyboard.isShiftDown() -> boolean
+
+Whether either Shift key is held.
+
+keyboard.isAltDown() -> boolean
+
+Whether either Alt key is held.
+
+keyboard.isControl(char) -> boolean
+
+Whether a character code is a control character
+(below 32, or 127–159).

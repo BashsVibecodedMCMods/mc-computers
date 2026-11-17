@@ -1,0 +1,22 @@
+PACKAGE - Computah OS library
+(generated from docs/API.md)
+
+require and module search.
+
+require(name) -> module
+
+Loads a library once and returns it. Searches
+package.path (/lib/?.lua;/usr/lib/?.lua;/home/lib/
+?.lua;./?.lua;/lib/?/init.lua;/usr/lib/?/init.lua)
+. Errors if it isn't found or fails to load.
+
+package.searchpath(name, path) -> filename
+
+Finds a module file along a path string (?
+replaced by the name with dots as slashes).
+Returns nil, triedPaths if not found.
+
+package.loaded, package.preload, package.path
+
+Loaded modules, loader functions to use instead of
+files, and the search path.

@@ -1,0 +1,11 @@
+COLORS - Computah OS library
+(generated from docs/API.md)
+
+Names for the 16 palette entries, for
+gpu.setForeground(colors.red, true): black 0,
+darkgray 1, gray 3, silver 6, lightgray 7, white
+9, red 10, green 11, blue 12, yellow 13, purple
+14, cyan 15, and transparent (-1, for
+backgrounds). colors.rgb holds common RGB values
+(colors.rgb.orange → 0xFFAA00). These differ from
+OpenComputers' colour numbers.

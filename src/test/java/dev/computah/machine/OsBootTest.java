@@ -302,6 +302,28 @@ public class OsBootTest {
         rig.machine.stop();
     }
 
+    /** Every function documented in docs/API.md and docs/LUA.md exists in the running OS. */
+    @Test
+    public void documentedFunctionsExist() throws Exception {
+        java.util.List<String> names = new java.util.ArrayList<>(dev.computah.docs.DocsTest.documentedFunctions("docs/API.md"));
+        names.addAll(dev.computah.docs.DocsTest.documentedFunctions("docs/LUA.md"));
+        assertTrue(names.size() > 150, "documented functions: " + names.size());
+        StringBuilder lua = new StringBuilder("local missing, n = {}, 0\n");
+        for (String name : names) {
+            String lib = name.substring(0, name.indexOf('.')), fn = name.substring(name.indexOf('.') + 1);
+            lua.append("do local ok, lib = pcall(require, '").append(lib).append("') n = n + 1 ")
+                    .append("if not ok or type(lib) ~= 'table' or type(lib['").append(fn).append("']) ~= 'function' then missing[#missing + 1] = '")
+                    .append(name).append("' end end\n");
+        }
+        lua.append("print('checked ' .. n .. ', missing: ' .. table.concat(missing, ' ') .. '.')\n");
+        Rig rig = new Rig(2048 * 1024);
+        rig.run(() -> rig.screenText().contains("/#"), 3000);
+        rig.runScript(lua.toString(), "missing:");
+        String text = rig.screenText().replace("\n", "");
+        assertTrue(text.contains("missing: ."), rig.screenText());
+        rig.machine.stop();
+    }
+
     @Test
     public void editorSavesFiles() throws Exception {
         Rig rig = new Rig(1024 * 1024);

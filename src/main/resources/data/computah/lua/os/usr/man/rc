@@ -1,14 +1,54 @@
-RC - background services
+RC - Computah OS library
+(generated from docs/API.md)
 
-Services are scripts in /etc/rc.d/NAME.lua that define start() and
-optionally stop(), status() or other commands. Services listed in
-/etc/rc.cfg start at boot.
+Background services ("daemons"). A service is
+/etc/rc.d/NAME.lua defining start() and optionally
+stop(), status() and other commands. /etc/rc.cfg
+lists services started at boot (enabled = {...})
+and settings per service (NAME = {...}, visible to
+the script as the global args). The rc program
+wraps this library.
 
-  rc                    list services
-  rc NAME start         start (also stop, restart, status)
-  rc NAME enable        start at boot (disable to undo)
+rc.run(name, command, ...) -> ok, result
 
-A service usually registers event listeners or starts a detached
-thread in start(). Settings for it go in /etc/rc.cfg as
-NAME = {...}; the script sees them as `args`. See
-/etc/rc.d/example.lua and /etc/rc.d/beacon.lua.
+Runs a command of a service: "start", "stop",
+"restart", "status" or any function the script
+defines. Loads the script on first use. Returns
+nil, reason on failure.
+
+rc.runCommand(name, command, ...) -> ok, result
+
+The OpenOS name for rc.run.
+
+rc.allRunCommand(command, ...) -> table
+
+Runs a command on every running service: {[name] =
+{ok, result}}.
+
+rc.load(name) -> environment
+
+Loads a service script and returns its environment
+(the table with its functions).
+
+rc.list() -> table
+
+Names of all services in /etc/rc.d.
+
+rc.isEnabled(name) -> boolean
+
+Whether a service starts at boot.
+
+rc.enable(name) / rc.disable(name)
+
+Adds a service to / removes it from the boot list
+in /etc/rc.cfg.
+
+rc.startEnabled()
+
+Starts every enabled service. The OS calls this at
+boot.
+
+rc.loaded, rc.running
+
+Tables of loaded service environments and of
+running services ({[name] = true}).

@@ -1,18 +1,86 @@
-SHELL
+SHELL - Computah OS library
+(generated from docs/API.md)
 
-Run programs by name; they are searched in $PATH (/bin:/usr/bin:/home/bin:.).
+Running programs and command lines. Syntax: see
+man sh or OS.md.
 
-  prog a "b c" 'd'     arguments, with quotes
-  prog > file          write output to a file (>> appends)
-  prog < file          read input from a file
-  prog 2> file         write errors to a file
-  a | b                a's output becomes b's input
-  a ; b                run a, then b
-  a && b               run b only if a succeeded (|| if it failed)
-  prog &               run in the background (see ps, kill)
-  $NAME ${NAME}        environment variables (set NAME=value)
-  *.lua                file name patterns
+shell.execute(command) -> ok, code
 
-Builtins: cd, pwd, set, unset, alias, unalias, exit.
-Keys: Tab completes, Up/Down history, Ctrl+C stops the running
-program, Ctrl+D on an empty line exits, Ctrl+Shift+V pastes.
+Runs a command line (pipes, redirection, ;, &&,
+||, &, variables, globs) and waits for it, except
+for background jobs. Returns success and the exit
+code or error.
+
+shell.run(program, ...) -> ok, code
+
+Runs one program by name with arguments and waits
+for it.
+
+shell.spawn(program, args[, streams[, detached]]) -> thread
+
+Starts a program as a new process without waiting.
+args is a list; streams may set stdin, stdout,
+stderr. Returns the thread, or nil, reason.
+
+shell.resolve(name[, extension]) -> path
+
+Finds a program: with an extension ("lua"),
+searches $PATH; names containing / are resolved
+directly. Returns nil, reason if not found.
+
+shell.load(path) -> function, env
+
+Loads a program file with a fresh environment
+based on the globals.
+
+shell.parse(...) -> args, options
+
+Splits arguments into plain arguments and options:
+-abc sets a, b and c; --name=value sets name; --
+ends options.
+
+  local args, opts = shell.parse(...)
+  if opts.v then print("verbose") end
+
+shell.parseLine(command) -> entries
+
+Parses a command line into {pipeline = {commands},
+background, op} entries without running it.
+
+shell.getWorkingDirectory() -> path
+
+The current process's working directory.
+
+shell.setWorkingDirectory(path) -> boolean
+
+Changes the working directory. Returns nil, "not a
+directory" if it isn't one.
+
+shell.getAlias(name) -> string
+
+What an alias stands for, or nil.
+
+shell.setAlias(name, value)
+
+Defines an alias (or removes it with nil): typing
+name runs value, with further words passed on.
+Defaults: ll, la, dir, cls, ?.
+
+shell.aliases() -> iterator
+
+Iterates over aliases: for name, value in
+shell.aliases() do ... end.
+
+shell.getPath() -> string
+
+The program search path ($PATH).
+
+shell.setPath(path)
+
+Sets the program search path.
+
+shell.builtins
+
+Table of shell builtins (cd, pwd, set, unset,
+alias, unalias, exit); add functions to make your
+own.

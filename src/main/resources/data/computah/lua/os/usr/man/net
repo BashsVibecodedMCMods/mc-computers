@@ -1,0 +1,56 @@
+NET - Computah OS library
+(generated from docs/API.md)
+
+Messages over the primary modem (network or
+wireless card), and host names. See also
+NETWORKING.md.
+
+net.modem() -> proxy
+
+The primary modem, or nil if there is no network
+or wireless card.
+
+net.open(port) -> boolean
+
+Opens a port on the primary modem (1–65535).
+Errors if there is no modem.
+
+net.close([port]) -> boolean
+
+Closes a port, or all ports.
+
+net.send(address, port, ...) -> boolean
+
+Sends a message to one modem. Values: nil,
+booleans, numbers, strings (8 values, 8 KiB in
+total).
+
+net.broadcast(port, ...) -> boolean
+
+Sends a message to every modem in reach.
+
+net.receive([timeout[, port]]) -> from, port, distance, ...
+
+Waits for a message (on one port, or any open
+port). Returns the sender's address, the port, the
+distance and the values, or nil after the timeout.
+
+  net.open(5)
+  local from, port, distance, text = net.receive(10, 5)
+
+net.hostname() -> string
+
+This computer's host name (os.hostname()).
+
+net.discover([hostname[, timeout]]) -> table
+
+Broadcasts a lookup on port 1 and collects answers
+for timeout seconds (default 1). Returns a list of
+{address, hostname, distance}. Only computers
+running the beacon service (enabled by default)
+answer; with a host name, only that host answers.
+
+net.resolve(name[, timeout]) -> address
+
+The address of a host by name (a full address is
+returned as is), or nil.

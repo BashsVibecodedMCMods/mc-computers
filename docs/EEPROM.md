@@ -56,42 +56,20 @@ There is no hidden second stage: if your EEPROM code wants an operating system, 
 The sandbox is the same for the BIOS and everything it loads (the OS adds libraries on top, but the BIOS runs
 before any of that).
 
-**Lua standard library:** `assert error getmetatable ipairs next pairs pcall rawequal rawget rawlen rawset select
-setmetatable tonumber tostring type xpcall load`, and the tables `string table math coroutine bit32 utf8 os debug`
-(only `debug.traceback` and `debug.getinfo`). `load` only accepts text. There is no `require`, `io`, `print`,
-`dofile` or `loadfile` – those come from an operating system.
+In short:
 
-**`checkArg(n, value, "type1", "type2", ...)`** raises a "bad argument" error if `value` has none of the types.
+- **Lua standard library** without `io`, `print`, `require`, `dofile`, `loadfile` (those come from an operating
+  system); `load` only accepts text; `debug` only has `traceback` and `getinfo`.
+- **`component`**: `list`, `invoke`, `proxy`, `type`, `slot`, `methods`, `doc`, `get`, `fields`.
+- **`computer`**: `pullSignal` (how code waits), `pushSignal`, `uptime`, `address`, `tmpAddress`, `freeMemory`,
+  `totalMemory`, `energy`, `maxEnergy`, `getBootAddress`, `setBootAddress`, `beep` (tone or pattern), `shutdown`,
+  `getDeviceInfo`, `getArchitecture(s)`, `isRobot`.
+- **`unicode`**: character-based string functions.
+- **`checkArg(n, value, types...)`** for argument checks.
 
-**`component`**
-
-| Function | Result |
-|---|---|
-| `component.list([type[, exact]])` | A table `{[address] = type}` that can also be called as an iterator: `for address, type in component.list("gpu") do ... end`. `component.list("gpu")()` returns the first match. |
-| `component.invoke(address, method, ...)` | Calls a method and returns its results; raises an error on failure. |
-| `component.proxy(address)` | A table with the component's methods as functions, plus `address`, `type`, `slot`. |
-| `component.type(address)`, `component.slot(address)` | Type, and slot in the case (-1 for blocks on the network). |
-| `component.methods(address)` | `{[name] = isDirect}` |
-| `component.doc(address, method)` | The method's documentation string. |
-| `component.get(prefix[, type])` | Full address from an abbreviation. |
-
-**`computer`**
-
-| Function | Result |
-|---|---|
-| `computer.pullSignal([timeout])` | Waits for the next signal (or until `timeout` seconds pass) and returns its name and values, or nothing on timeout. **This is how code waits.** |
-| `computer.pushSignal(name, ...)` | Queues a signal for this computer (values: nil, booleans, numbers, strings, simple tables). |
-| `computer.uptime()` | Seconds since boot (game time, 20 ticks per second). |
-| `computer.address()` | This computer's own address (it is also a `computer` component). |
-| `computer.tmpAddress()` | Address of the 64 KiB temporary filesystem that every computer gets (empty at each boot). |
-| `computer.freeMemory()`, `computer.totalMemory()` | Memory, in bytes (free memory is an estimate). |
-| `computer.energy()`, `computer.maxEnergy()` | Stored energy (a large number when power is disabled). |
-| `computer.getBootAddress()`, `computer.setBootAddress([address])` | Read/write the EEPROM data area. |
-| `computer.beep([frequency[, duration]])` | Plays a tone (20-2000 Hz, up to 5 s). |
-| `computer.shutdown([reboot])` | Turns the computer off, or restarts it when `reboot` is true. |
-| `computer.getArchitecture()` | `"Lua 5.2"` |
-
-**`unicode`**: `char len sub upper lower reverse wlen wtrunc charWidth isWide`, working on UTF-8 characters instead of bytes.
+Every one of these is documented with arguments, results and examples in **[LUA.md](LUA.md)**. An operating
+system adds more on top (Computah OS: [API.md](API.md)) but never changes these, so BIOS code and the code it loads
+see the same functions.
 
 ### Signals
 
@@ -369,5 +347,6 @@ drive. Use this to hand out tamper-proof firmware.
 
 ## Reference
 
-See [COMPONENTS.md](COMPONENTS.md#eeprom) for every `eeprom` method, [LUA.md](LUA.md) for the sandbox, and
+See [COMPONENTS.md](COMPONENTS.md#eeprom) for every `eeprom` method, [LUA.md](LUA.md) for everything BIOS code can
+call, and
 `man eeprom` in-game for a short version of this guide.

@@ -8,6 +8,7 @@ First test build of Computah.
 - Computah OS on a craftable floppy: threads, background jobs (`&`), events and timers, rc services, a shell with pipes and redirection, `edit`, `lua`, manual pages, `install` to a hard drive.
 - Screens with a text layer and a pixel layer (up to 640x400, 256 colours); screens merge into monitors up to 8x6 blocks with connected bezels; the world shows the same image as the screen GUI.
 - Memory modules of 512 KiB, 1 MiB, 2 MiB and 4 MiB.
+- Full API reference: docs/API.md (every Computah OS library function, OpenOS-compatible names) and docs/LUA.md (everything EEPROM code can use), also as in-game `man` pages.
 - Network cables, network and wireless cards, relays; the Linker links blocks wirelessly; adapters expose inventories, tanks and energy storage.
 - Optional Forge Energy use (off by default).
 - Textures, GUI art and sounds from OpenComputers (CC0); hard drive sound based on "hard_drive_noise (miroslawski.net).wav" by artykris (Sampling+). See CREDITS.md.

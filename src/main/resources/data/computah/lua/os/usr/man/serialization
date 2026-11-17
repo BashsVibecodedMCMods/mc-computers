@@ -1,0 +1,19 @@
+SERIALIZATION - Computah OS library
+(generated from docs/API.md)
+
+serialization.serialize(value[, pretty]) -> string
+
+Turns a value (nil, boolean, number, string, or
+tables of those) into Lua source text. Tables with
+cycles raise an error. pretty = true adds line
+breaks and indentation, and shows other values
+(functions) as names instead of failing.
+
+serialization.unserialize(text) -> value
+
+Reads text made by serialize back into a value.
+Returns nil, reason for invalid text. The text
+can't run code.
+
+  filesystem.writeAll("/home/cfg", serialization.serialize({volume = 3, names = {"a", "b"}}))
+  local cfg = serialization.unserialize(filesystem.readAll("/home/cfg"))

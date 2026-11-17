@@ -8,7 +8,10 @@ modular Lua computers and rack servers. Mod id `computah`, package `dev.computah
 Tweaked. Lua runs on Cobalt (`cc.tweaked:cobalt`), repackaged by the `relocateCobalt` Gradle task into
 `dev.computah.repack.cobalt` and shipped inside our jar (import it from there, never `org.squiddev`). The design docs in `docs/` are the spec;
 keep them in sync with behaviour. `docs/COMPONENTS.md` is generated: run `python3 tools/components_doc.py .` after
-changing any `@Callback` (a unit test fails otherwise).
+changing any `@Callback` (a unit test fails otherwise). `docs/API.md` (OS libraries) and `docs/LUA.md` (machine
+level) document every Lua function as `### lib.name(...)` headings; `OsBootTest.documentedFunctionsExist` fails if a
+documented function is missing, and the in-game man pages are generated from API.md with
+`python3 tools/api_man.py .` (`DocsTest` checks them).
 
 ## Commands
 - Build and run unit tests: `./gradlew build`. JUnit tests in `src/test` run through ModDevGradle's `unitTest`
@@ -47,6 +50,9 @@ changing any `@Callback` (a unit test fails otherwise).
   `runningcomputersurvivesreload`) to pass.
 
 ## Rules
+- The OS only *adds* to the sandbox's `component`/`computer` tables (`init.lua` runs `lib/component.lua` and
+  `lib/computer.lua` explicitly, since `package.loaded` points at the globals); never replace raw functions EEPROM
+  code relies on. Library names follow OpenOS.
 - Lua strings are bytes: component text arguments are decoded as UTF-8 and returned as UTF-8.
 - Lua 5.2: no `//` integer division or `goto`-only tricks in Lua files; use `math.floor`.
 - Game tests change global config, so each sets every value it relies on in `configure()` and uses its own batch.

@@ -49,22 +49,12 @@ Listener and timer callbacks run in the scheduler between threads; they must not
 
 ## Libraries
 
-| Library | Contents |
-|---|---|
-| `filesystem` | `mount umount mounts get exists isDirectory size lastModified list makeDirectory remove rename copy open readAll writeAll canonical concat path name segments isReadOnly` |
-| `io` | `open lines read write input output error pipe stream isTerminal`, `io.stdin/stdout/stderr` per process; streams support `read("l"/"L"/"n"/"a"/n)`, `write`, `lines`, `seek`, `close`. `print` writes to stdout. |
-| `os` | adds `sleep getenv setenv exit remove rename tmpname execute hostname` |
-| `term` | `write read clear clearLine getCursor setCursor getViewport scroll bind gpu screen keyboards isAvailable setCursorBlink`; `term.write` handles ANSI colour codes. |
-| `shell` | `execute run spawn parse resolve getWorkingDirectory setWorkingDirectory aliases builtins` |
-| `component` | adds `isAvailable getPrimary setPrimary` and `component.gpu`, `component.modem`, ... for primary components |
-| `keyboard` | `keys` (GLFW codes), `isKeyDown isControlDown isShiftDown isAltDown isControl` |
-| `thread`, `process`, `event` | see above |
-| `rc` | services (below) |
-| `net` | messaging and host discovery ([NETWORKING.md](NETWORKING.md)) |
-| `graphics` | pixel drawing ([GRAPHICS.md](GRAPHICS.md)) |
-| `serialization` | `serialize(value[, pretty])`, `unserialize(text)` |
-| `text` | `trim split tokenize padLeft padRight wrap detab size` |
-| `colors`, `sides` | palette names; side numbers |
+Computah OS provides `component` (primary components), `computer`, `event`, `filesystem`, `io`, `keyboard`, `net`,
+`graphics`, `note`, `os`, `process`, `thread`, `rc`, `serialization`, `shell`, `sides`, `colors`, `term`, `text`,
+`uuid` and `require`/`package`. Every function is documented in **[API.md](API.md)** (and in game with
+`man <library>`); the machine-level functions underneath (`component.invoke`, `computer.pullSignal`, ...) are in
+[LUA.md](LUA.md). Names follow OpenOS, so most OpenComputers programs need few changes; see API.md for the
+differences (key codes, colours, sides).
 
 ## Shell
 
@@ -76,7 +66,7 @@ and `\` escapes. Builtins: `cd pwd set unset alias unalias exit`. `PATH` default
 
 `beep cat cd clear components cp date df dmesg echo edit env flash free gfxdemo grep head help hostname install
 kill label ls lua man mkdir more mount msg mv ping ps rc reboot resolution rm sh shutdown sleep touch umount uptime
-wc which`. `help` lists them; `man <topic>` has manuals for `eeprom shell threads rc network graphics edit
+wc which`. `help` lists them; `man <topic>` has manuals for every library in API.md plus `eeprom sh threads network gpu edit
 components lua`.
 
 ## Services (rc)

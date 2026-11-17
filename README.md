@@ -32,8 +32,9 @@ other mod needed.
 ## Documentation
 
 - [docs/EEPROM.md](docs/EEPROM.md) – the BIOS chip, boot sequence and writing your own firmware
-- [docs/OS.md](docs/OS.md) – Computah OS: processes, threads, events, libraries, shell, services
-- [docs/LUA.md](docs/LUA.md) – the Lua sandbox and limits
+- [docs/OS.md](docs/OS.md) – Computah OS: processes, threads, events, shell, services
+- [docs/API.md](docs/API.md) – every Computah OS library function (OpenOS-compatible names)
+- [docs/LUA.md](docs/LUA.md) – the machine-level API (what EEPROM code can use), the sandbox and limits
 - [docs/GRAPHICS.md](docs/GRAPHICS.md) – text and pixel graphics, buffers, monitors
 - [docs/NETWORKING.md](docs/NETWORKING.md) – cables, messages, wireless links, adapters
 - [docs/COMPONENTS.md](docs/COMPONENTS.md) – every component method and signal

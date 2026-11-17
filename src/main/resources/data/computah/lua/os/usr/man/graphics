@@ -1,23 +1,74 @@
-GRAPHICS
+GRAPHICS - Computah OS library
+(generated from docs/API.md)
 
-The GPU has a text layer and a pixel layer under it. Text cells with
-a transparent background (-1) show the pixels.
+Pixel drawing on the primary GPU (see
+GRAPHICS.md). Coordinates start at 1; colours are
+pixel colour indices (0–15 palette, 16–255 fixed
+cube). Pixels show where text cells are
+transparent, which graphics.clear arranges.
 
-Text: gpu.set(x, y, text), gpu.fill, gpu.copy, gpu.get,
-  gpu.setForeground(0xRRGGBB), gpu.setBackground(color or -1),
-  gpu.setStyle{bold=, italic=, underline=, strikethrough=,
-  inverse=, blink=}, gpu.setResolution(w, h)
+graphics.gpu() -> proxy
 
-Pixels (colour indices 0-255; 0-15 the palette):
-  gpu.setPixel(x, y, c)  gpu.getPixel(x, y)
-  gpu.fillRect(x, y, w, h, c)  gpu.drawRect  gpu.drawLine
-  gpu.drawCircle(x, y, r, c, filled)  gpu.drawText(x, y, s, c, scale)
-  gpu.blit(x, y, w, h, data)  gpu.readPixels  gpu.copyPixels
-  gpu.clearPixels(c)  gpu.clearText()  gpu.findPixelColor(rgb)
+The GPU the terminal uses, or the primary GPU.
 
-Sizes: tier 1 160x100 (16 colours), tier 2 320x200, tier 3 640x400.
-Buffers: gpu.allocateBuffer(), gpu.setActiveBuffer(i), gpu.bitblt,
-gpu.bitbltPixels for flicker-free drawing.
+graphics.size() -> width, height
 
-The graphics library wraps this: graphics.clear, pixel, line, rect,
-circle, text, sprite, draw, loadImage. Try `gfxdemo`.
+The size of the pixel layer.
+
+graphics.color(rgb) -> index
+
+The pixel colour index closest to an RGB colour.
+
+graphics.clear([color])
+
+Makes all text cells transparent and fills the
+pixel layer with a colour (default 0).
+
+graphics.pixel(x, y, color)
+
+Sets one pixel.
+
+graphics.get(x, y) -> index
+
+The colour index of a pixel.
+
+graphics.line(x1, y1, x2, y2, color)
+
+Draws a line.
+
+graphics.rect(x, y, width, height, color[, filled])
+
+Draws a rectangle outline, or a filled rectangle.
+
+graphics.circle(x, y, radius, color[, filled])
+
+Draws a circle outline, or a filled circle.
+
+graphics.text(x, y, text, color[, scale])
+
+Draws text into the pixel layer with the screen
+font (8×16 per character, times scale).
+
+graphics.sprite(width, height[, data]) -> sprite
+
+A sprite table {width, height, data}; data holds
+one colour index byte per pixel, row by row
+(default all 0).
+
+graphics.draw(sprite, x, y)
+
+Draws a sprite.
+
+graphics.capture(x, y, width, height) -> sprite
+
+Reads a rectangle of the screen into a sprite.
+
+graphics.loadImage(path) -> sprite
+
+Loads a .cpi image ("CPI1", width and height as
+2-byte big-endian numbers, then the pixels).
+Returns nil, reason on failure.
+
+graphics.saveImage(path, sprite) -> boolean
+
+Saves a sprite as a .cpi image.

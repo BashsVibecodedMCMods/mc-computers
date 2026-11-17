@@ -1,0 +1,20 @@
+COMPUTER - Computah OS library
+(generated from docs/API.md)
+
+The machine's computer library (LUA.md) plus:
+
+computer.runlevel() -> number
+
+Always 1 once the OS has booted (OpenOS reports
+"S" while booting).
+
+computer.getProgramLocations() -> table
+
+Where programs that aren't installed could be
+found (OpenOS uses this for hints). Computah OS
+has none: returns {}.
+
+Inside the OS, computer.pullSignal(timeout) waits
+through the scheduler, so other threads keep
+running while one waits; see process. Use
+event.pull in programs.
